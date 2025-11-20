@@ -57,7 +57,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       req.session.userId = user.id;
-      res.json({ success: true, userId: user.id });
+      // Save session explicitly
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        console.log("Login successful - Session ID:", req.sessionID, "User ID:", user.id);
+        res.json({ success: true, userId: user.id });
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Login failed" });
     }
@@ -73,6 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Check auth status (public - no auth required)
   app.get("/api/auth/status", (req, res) => {
+    console.log("Auth status check - Session ID:", req.sessionID, "User ID:", req.session.userId);
     if (!req.session.userId) {
       return res.status(401).json({ authenticated: false });
     }
