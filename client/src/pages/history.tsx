@@ -507,6 +507,46 @@ export default function History() {
     return `${Math.floor(hours / 168)} weeks ago`;
   };
 
+  const handleShare = async (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    
+    // Encode the analysis data
+    const analysisData = btoa(JSON.stringify(mockResults[item.id]));
+    const shareLink = `${window.location.origin}/?share=${item.id}&data=${analysisData}`;
+    
+    const shareData = {
+      title: `Check out "${item.productName}" supplement analysis - Score: ${item.score}/100`,
+      text: `I found a ${item.score}/100 rated ${item.productName} supplement on NutraScan AI. Download the app to see my full analysis and get personalized recommendations!`,
+      url: shareLink,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared!",
+          description: "Your analysis has been shared",
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareLink);
+        toast({
+          title: "Link copied!",
+          description: "Share link copied to clipboard",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to copy share link",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const allHistory = history.length > 0 ? history : mockHistory;
   const filteredHistory = allHistory.filter((item) => {
     const matchesSearch =
@@ -604,6 +644,7 @@ export default function History() {
                   sessionStorage.setItem("currentAnalysis", JSON.stringify(mockResults[item.id]));
                   setLocation("/results");
                 }}
+                onShare={(e) => handleShare(e, item)}
               />
             ))}
           </div>
