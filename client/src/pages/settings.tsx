@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2, User, Mail, Phone, Eye, EyeOff } from "lucide-react";
+import { Bell, Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2, User, Mail, Phone, Eye, EyeOff, Camera, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
@@ -12,6 +13,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
   const [isSavingAccount, setIsSavingAccount] = useState(false);
+  const [isEditingPhoto, setIsEditingPhoto] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const { toast } = useToast();
@@ -28,10 +30,13 @@ export default function Settings() {
     name: "",
     email: "",
     phone: "",
+    profileImage: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  const [photoPreview, setPhotoPreview] = useState("");
 
   useEffect(() => {
     loadSettings();
@@ -60,14 +65,34 @@ export default function Settings() {
           name: status.account.name || "",
           email: status.account.email || "",
           phone: status.account.phone || "",
+          profileImage: status.account.profileImage || "",
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
+        setPhotoPreview(status.account.profileImage || "");
       }
     } catch (error) {
       console.error("Failed to load account info:", error);
     }
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setPhotoPreview(base64);
+      setAccountData({ ...accountData, profileImage: base64 });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview("");
+    setAccountData({ ...accountData, profileImage: "" });
   };
 
   const saveSettings = (newSettings: typeof settings) => {
@@ -94,9 +119,11 @@ export default function Settings() {
           name: accountData.name,
           email: accountData.email,
           phone: accountData.phone,
+          profileImage: accountData.profileImage || null,
         }),
       });
       setIsEditingAccount(false);
+      setIsEditingPhoto(false);
       toast({
         title: "Account Updated",
         description: "Your account information has been saved successfully",
@@ -174,8 +201,14 @@ export default function Settings() {
             <h2 className="text-lg font-semibold font-heading">Account Information</h2>
             <Button
               size="sm"
-              variant={isEditingAccount ? "default" : "outline"}
-              onClick={() => (isEditingAccount ? handleSaveAccount() : setIsEditingAccount(true))}
+              variant={isEditingAccount || isEditingPhoto ? "default" : "outline"}
+              onClick={() => {
+                if (isEditingAccount || isEditingPhoto) {
+                  handleSaveAccount();
+                } else {
+                  setIsEditingAccount(true);
+                }
+              }}
               disabled={isSavingAccount}
               data-testid="button-edit-account"
             >
@@ -184,7 +217,7 @@ export default function Settings() {
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                   Saving...
                 </>
-              ) : isEditingAccount ? (
+              ) : isEditingAccount || isEditingPhoto ? (
                 "Save Account"
               ) : (
                 "Edit Account"
@@ -192,117 +225,189 @@ export default function Settings() {
             </Button>
           </div>
 
-          <Card className="p-6 space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Full Name</label>
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Your name"
-                  value={accountData.name}
-                  onChange={(e) => setAccountData({ ...accountData, name: e.target.value })}
-                  disabled={!isEditingAccount}
-                  data-testid="input-name"
-                />
-              </div>
+          <Card className="p-6 space-y-6">
+            {/* Profile Photo Section */}
+            <div className="flex flex-col items-center gap-4">
+              <Avatar className="w-24 h-24 border-2 border-primary">
+                <AvatarImage src={photoPreview} alt="Profile" />
+                <AvatarFallback className="text-2xl font-bold bg-primary/20">
+                  {accountData.name
+                    ? accountData.name.split(" ").map((n) => n[0]).join("").toUpperCase()
+                    : "NS"}
+                </AvatarFallback>
+              </Avatar>
+
+              {isEditingAccount && (
+                <div className="w-full space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                    id="photo-input"
+                    data-testid="input-photo"
+                  />
+                  <div className="flex gap-2 justify-center">
+                    <label htmlFor="photo-input">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                        className="cursor-pointer"
+                        data-testid="button-edit-photo"
+                      >
+                        <span>
+                          <Camera className="w-4 h-4 mr-1" />
+                          Edit Photo
+                        </span>
+                      </Button>
+                    </label>
+                    {photoPreview && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRemovePhoto}
+                        className="text-destructive hover:text-destructive"
+                        data-testid="button-remove-photo"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground">
+                    {photoPreview ? "Photo selected" : "No photo selected"}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Email Address</label>
-              <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={accountData.email}
-                  onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
-                  disabled={!isEditingAccount}
-                  data-testid="input-email"
-                />
+            {/* Account Info Fields */}
+            <div className="space-y-4 border-t border-border pt-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Full Name</label>
+                <div className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-muted-foreground" />
+                  <Input
+                    placeholder="Your name"
+                    value={accountData.name}
+                    onChange={(e) => setAccountData({ ...accountData, name: e.target.value })}
+                    disabled={!isEditingAccount}
+                    data-testid="input-name"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Phone Number</label>
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="+1 (555) 000-0000"
-                  value={accountData.phone}
-                  onChange={(e) => setAccountData({ ...accountData, phone: e.target.value })}
-                  disabled={!isEditingAccount}
-                  data-testid="input-phone"
-                />
+              <div>
+                <label className="text-sm font-medium mb-2 block">Email Address</label>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={accountData.email}
+                    onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
+                    disabled={!isEditingAccount}
+                    data-testid="input-email"
+                  />
+                </div>
               </div>
-            </div>
 
-            {isEditingAccount && (
-              <>
-                <div className="border-t border-border pt-4 mt-4">
-                  <p className="text-sm font-medium mb-4 text-muted-foreground">Change Password (Optional)</p>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Phone Number</label>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                  <Input
+                    placeholder="+1 (555) 000-0000"
+                    value={accountData.phone}
+                    onChange={(e) => setAccountData({ ...accountData, phone: e.target.value })}
+                    disabled={!isEditingAccount}
+                    data-testid="input-phone"
+                  />
+                </div>
+              </div>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Current Password</label>
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-5 h-5 text-muted-foreground" />
-                        <div className="flex-1 relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter current password"
-                            value={accountData.currentPassword}
-                            onChange={(e) => setAccountData({ ...accountData, currentPassword: e.target.value })}
-                            data-testid="input-current-password"
-                          />
-                          <button
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
+              {isEditingAccount && (
+                <>
+                  <div className="border-t border-border pt-4 mt-4">
+                    <p className="text-sm font-medium mb-4 text-muted-foreground">Change Password (Optional)</p>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Current Password</label>
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-5 h-5 text-muted-foreground" />
+                          <div className="flex-1 relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              placeholder="Enter current password"
+                              value={accountData.currentPassword}
+                              onChange={(e) =>
+                                setAccountData({ ...accountData, currentPassword: e.target.value })
+                              }
+                              data-testid="input-current-password"
+                            />
+                            <button
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">New Password</label>
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-5 h-5 text-muted-foreground" />
-                        <Input
-                          type={showNewPassword ? "text" : "password"}
-                          placeholder="Enter new password"
-                          value={accountData.newPassword}
-                          onChange={(e) => setAccountData({ ...accountData, newPassword: e.target.value })}
-                          data-testid="input-new-password"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Confirm New Password</label>
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-5 h-5 text-muted-foreground" />
-                        <div className="flex-1 relative">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">New Password</label>
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-5 h-5 text-muted-foreground" />
                           <Input
                             type={showNewPassword ? "text" : "password"}
-                            placeholder="Confirm new password"
-                            value={accountData.confirmPassword}
-                            onChange={(e) => setAccountData({ ...accountData, confirmPassword: e.target.value })}
-                            data-testid="input-confirm-password"
+                            placeholder="Enter new password"
+                            value={accountData.newPassword}
+                            onChange={(e) =>
+                              setAccountData({ ...accountData, newPassword: e.target.value })
+                            }
+                            data-testid="input-new-password"
                           />
-                          <button
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Confirm New Password</label>
+                        <div className="flex items-center gap-2">
+                          <Lock className="w-5 h-5 text-muted-foreground" />
+                          <div className="flex-1 relative">
+                            <Input
+                              type={showNewPassword ? "text" : "password"}
+                              placeholder="Confirm new password"
+                              value={accountData.confirmPassword}
+                              onChange={(e) =>
+                                setAccountData({
+                                  ...accountData,
+                                  confirmPassword: e.target.value,
+                                })
+                              }
+                              data-testid="input-confirm-password"
+                            />
+                            <button
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showNewPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </Card>
         </section>
 

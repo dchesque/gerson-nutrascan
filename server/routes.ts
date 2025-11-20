@@ -141,6 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: user.name,
           email: user.email,
           phone: user.phone,
+          profileImage: user.profileImage,
         },
         profile: {
           age: user.age,
@@ -196,16 +197,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user account info (name, email, phone)
+  // Update user account info (name, email, phone, profileImage)
   app.patch("/api/user/account", async (req, res) => {
     try {
       const userId = req.session.userId!;
-      const { name, email, phone } = req.body;
+      const { name, email, phone, profileImage } = req.body;
 
       const updated = await storage.updateUserAccountInfo(userId, {
         name,
         email,
         phone,
+        profileImage,
       });
 
       res.json({
@@ -214,6 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: updated.name,
           email: updated.email,
           phone: updated.phone,
+          profileImage: updated.profileImage,
         },
       });
     } catch (error: any) {

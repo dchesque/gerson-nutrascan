@@ -24,6 +24,7 @@ export interface IStorage {
     name?: string;
     email?: string;
     phone?: string;
+    profileImage?: string | null;
   }): Promise<User>;
   
   // Analysis management
@@ -145,6 +146,7 @@ export class MemStorage implements IStorage {
     name?: string;
     email?: string;
     phone?: string;
+    profileImage?: string | null;
   }): Promise<User> {
     const user = this.users.get(userId);
     if (!user) throw new Error("User not found");
@@ -154,6 +156,7 @@ export class MemStorage implements IStorage {
       name: info.name ?? user.name,
       email: info.email ?? user.email,
       phone: info.phone ?? user.phone,
+      profileImage: info.profileImage !== undefined ? info.profileImage : user.profileImage,
     };
     this.users.set(userId, updated);
     return updated;

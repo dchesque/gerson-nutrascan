@@ -43,6 +43,7 @@ export interface UserStatus {
     name: string | null;
     email: string | null;
     phone: string | null;
+    profileImage: string | null;
   };
   profile?: {
     age: number | null;

@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   name: text("name"),
   phone: text("phone"),
   password: text("password"),
+  profileImage: text("profile_image"), // Base64 or URL
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   isPremium: boolean("is_premium").notNull().default(false),
