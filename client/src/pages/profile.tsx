@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Crown, DollarSign, Activity, Settings, LogOut, Loader2, Heart, Zap, Save } from "lucide-react";
+import { Crown, DollarSign, Activity, Settings, LogOut, Loader2, Heart, Zap, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showHealthProfile, setShowHealthProfile] = useState(true);
   const { toast } = useToast();
 
   const [profileData, setProfileData] = useState({
@@ -184,34 +185,51 @@ export default function Profile() {
               <Heart className="w-5 h-5 text-primary" />
               <h3 className="font-semibold text-lg">Your Health Profile</h3>
             </div>
-            <Button
-              size="sm"
-              variant={isEditing ? "default" : "outline"}
-              onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
-              disabled={isSaving}
-              data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  Saving...
-                </>
-              ) : isEditing ? (
-                <>
-                  <Save className="w-4 h-4 mr-1" />
-                  Save Profile
-                </>
-              ) : (
-                "Edit Profile"
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowHealthProfile(!showHealthProfile)}
+                data-testid="button-toggle-health-profile"
+                title={showHealthProfile ? "Hide profile" : "Show profile"}
+              >
+                {showHealthProfile ? (
+                  <ChevronUp className="w-5 h-5" />
+                ) : (
+                  <ChevronDown className="w-5 h-5" />
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant={isEditing ? "default" : "outline"}
+                onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
+                disabled={isSaving || !showHealthProfile}
+                data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    Saving...
+                  </>
+                ) : isEditing ? (
+                  <>
+                    <Save className="w-4 h-4 mr-1" />
+                    Save Profile
+                  </>
+                ) : (
+                  "Edit Profile"
+                )}
+              </Button>
+            </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-6">
-            Help us find supplements tailored specifically to your needs
-          </p>
+          {showHealthProfile && (
+            <>
+              <p className="text-sm text-muted-foreground mb-6">
+                Help us find supplements tailored specifically to your needs
+              </p>
 
-          <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Age</label>
               <Input
@@ -312,6 +330,8 @@ export default function Profile() {
               />
             </div>
           </div>
+            </>
+          )}
         </Card>
 
         <Card className="divide-y divide-border">
