@@ -426,7 +426,7 @@ export default function Home() {
               className="bg-gradient-to-r from-primary to-primary/90 text-lg font-semibold px-8"
               data-testid="button-final-cta"
             >
-              Analyze Your First Supplement Free <ArrowRight className="w-5 h-5 ml-2" />
+              Analyze Free Now <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             <p className="text-sm text-muted-foreground mt-6">No credit card required • Instant results • 10 seconds to analyze</p>
           </div>
