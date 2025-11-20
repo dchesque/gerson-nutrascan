@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create a price for the subscription
         const price = await stripe.prices.create({
           currency: "usd",
-          unit_amount: 999, // $9.99 in cents
+          unit_amount: 1490, // $14.90 in cents
           recurring: { interval: "month" },
           product_data: {
             name: "NutraScan AI Premium",

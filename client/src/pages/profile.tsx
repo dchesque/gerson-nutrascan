@@ -87,7 +87,7 @@ export default function Profile() {
                   Unlimited analyses and save hundreds on supplements
                 </p>
                 <Button size="sm" onClick={() => setLocation("/subscribe")} data-testid="button-upgrade">
-                  Upgrade Now - $9.99/mo
+                  Upgrade Now - $14.90/mo or $119/year
                 </Button>
               </div>
             </div>
