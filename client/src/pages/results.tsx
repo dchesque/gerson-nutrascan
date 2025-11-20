@@ -17,6 +17,7 @@ const mockResult = {
     score: 45,
     totalSavings: 12.50,
     benefits: "Immune support, Energy, Overall health",
+    productImage: "https://images.unsplash.com/photo-1585435555220-1f5f025c269b?w=200&h=200&fit=crop",
     ingredients: [
       {
         name: "Vitamin D3",
@@ -171,8 +172,21 @@ export default function Results() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex justify-center">
-          <ScoreDisplay score={result.score} />
+        {/* Product Image and Score */}
+        <div className="flex gap-6 items-start">
+          {result.productImage && (
+            <div className="flex-shrink-0">
+              <img
+                src={result.productImage}
+                alt={result.productName}
+                className="w-32 h-32 object-cover rounded-lg border border-border"
+                data-testid="product-image-results"
+              />
+            </div>
+          )}
+          <div className="flex-1 flex justify-center">
+            <ScoreDisplay score={result.score} />
+          </div>
         </div>
 
         {/* Benefits Section */}

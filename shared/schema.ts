@@ -44,6 +44,9 @@ export const analyses = pgTable("analyses", {
   monitorPrice: boolean("monitor_price").notNull().default(false),
   targetPrice: integer("target_price"), // in cents - notify when price drops below this
   
+  // Product image
+  productImage: text("product_image"), // URL to product image
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
