@@ -3,67 +3,19 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import NotFound from "@/pages/not-found";
-import Auth from "@/pages/auth";
-import Home from "@/pages/home";
-import ScanFree from "@/pages/scan-free";
 import Scan from "@/pages/scan";
 import Results from "@/pages/results";
-import History from "@/pages/history";
-import Profile from "@/pages/profile";
-import Subscribe from "@/pages/subscribe";
-import Pricing from "@/pages/pricing";
-import Settings from "@/pages/settings";
-import BottomNav from "@/components/BottomNav";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/auth" component={Auth} />
-        
-        {/* Require auth for all features */}
-        {isAuthenticated && (
-          <>
-            <Route path="/scan" component={Scan} />
-            <Route path="/results" component={Results} />
-            <Route path="/history" component={History} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/subscribe" component={Subscribe} />
-            <Route path="/pricing" component={Pricing} />
-            <Route path="/settings" component={Settings} />
-          </>
-        )}
-        
-        {/* Redirect to auth if not authenticated */}
-        {!isAuthenticated && (
-          <>
-            <Route path="/scan" component={Auth} />
-            <Route path="/results" component={Auth} />
-            <Route path="/history" component={Auth} />
-            <Route path="/profile" component={Auth} />
-            <Route path="/subscribe" component={Auth} />
-            <Route path="/pricing" component={Auth} />
-            <Route path="/settings" component={Auth} />
-          </>
-        )}
-        
+        <Route path="/" component={Scan} />
+        <Route path="/scan" component={Scan} />
+        <Route path="/results" component={Results} />
         <Route component={NotFound} />
       </Switch>
-      {/* Only show nav if authenticated */}
-      {isAuthenticated && <BottomNav />}
     </>
   );
 }
@@ -72,10 +24,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Router />
-        </AuthProvider>
+        <Toaster />
+        <Router />
       </TooltipProvider>
     </QueryClientProvider>
   );

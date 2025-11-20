@@ -17,92 +17,7 @@ function hashPassword(password: string): string {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Auth routes MUST come before auth guard middleware
-  
-  // Signup
-  app.post("/api/auth/signup", async (req, res) => {
-    try {
-      const validated = signupSchema.parse(req.body);
-      
-      const existingUser = await storage.getUserByEmail(validated.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-      
-      const user = await storage.createUser({
-        email: validated.email,
-        passwordHash: hashPassword(validated.password),
-      });
-      
-      req.session.userId = user.id;
-      res.json({ success: true, userId: user.id });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Signup failed" });
-    }
-  });
-
-  // Login
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const validated = loginSchema.parse(req.body);
-      
-      const user = await storage.getUserByEmail(validated.email);
-      if (!user || !user.passwordHash) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      const isValid = await storage.verifyPassword(user.id, validated.password);
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      req.session.userId = user.id;
-      // Save session explicitly
-      req.session.save((err) => {
-        if (err) {
-          console.error("Session save error:", err);
-          return res.status(500).json({ message: "Session error" });
-        }
-        console.log("Login successful - Session ID:", req.sessionID, "User ID:", user.id);
-        res.json({ success: true, userId: user.id });
-      });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Login failed" });
-    }
-  });
-
-  // Logout
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) return res.status(500).json({ message: "Logout failed" });
-      res.json({ success: true });
-    });
-  });
-
-  // Check auth status (public - no auth required)
-  app.get("/api/auth/status", (req, res) => {
-    console.log("Auth status check - Session ID:", req.sessionID, "User ID:", req.session.userId);
-    if (!req.session.userId) {
-      return res.status(401).json({ authenticated: false });
-    }
-    res.json({ authenticated: true, userId: req.session.userId });
-  });
-
-  // Auth guard middleware - require auth for all API routes except /auth
-  app.use("/api", (req, res, next) => {
-    // Allow public auth routes
-    if (req.path.startsWith("/auth")) {
-      return next();
-    }
-    
-    // Require auth for all other API routes
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized - Please login or signup" });
-    }
-    next();
-  });
-
-  // Analyze supplement - main AI-powered analysis endpoint (REQUIRES AUTH)
+  // Analyze supplement - NO AUTH REQUIRED
   app.post("/api/analyze", async (req, res) => {
     try {
       const { type, content } = req.body;
@@ -111,23 +26,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      // Require authentication
-      const userId = req.session.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required. Please sign up or login." });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
-
       // Perform AI analysis
       const analysisResult = await analyzeSupplementWithAI(content);
 
-      // Save analysis to storage
+      // Save analysis (no user ID needed)
       const analysis = await storage.createAnalysis({
-        userId,
         productName: analysisResult.productName,
         brand: analysisResult.brand,
         score: analysisResult.score,
