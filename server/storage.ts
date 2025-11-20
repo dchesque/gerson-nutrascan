@@ -1,11 +1,12 @@
 import { type User, type InsertUser, type Analysis, type InsertAnalysis } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 
 export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  verifyPassword(userId: string, password: string): Promise<boolean>;
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId: string): Promise<User>;
   updateUserPremiumStatus(userId: string, isPremium: boolean): Promise<User>;
   incrementFreeAnalyses(userId: string): Promise<User>;
@@ -34,6 +35,10 @@ export interface IStorage {
   deleteAnalysis(id: string): Promise<void>;
 }
 
+function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private analyses: Map<string, Analysis>;
@@ -58,8 +63,12 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const user: User = { 
-      ...insertUser, 
       id,
+      email: insertUser.email,
+      passwordHash: insertUser.passwordHash || null,
+      name: null,
+      phone: null,
+      profileImage: null,
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       isPremium: false,
@@ -78,6 +87,12 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async verifyPassword(userId: string, password: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user || !user.passwordHash) return false;
+    return user.passwordHash === hashPassword(password);
   }
 
   async updateUserStripeInfo(userId: string, customerId: string, subscriptionId: string): Promise<User> {
