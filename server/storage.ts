@@ -192,6 +192,10 @@ export class MemStorage implements IStorage {
       totalSavings: insertAnalysis.totalSavings ?? 0,
       onlineAlternatives: insertAnalysis.onlineAlternatives ?? null,
       localAlternatives: insertAnalysis.localAlternatives ?? null,
+      benefits: null,
+      monitorPrice: false,
+      targetPrice: null,
+      productImage: null,
       createdAt: new Date(),
     };
     this.analyses.set(id, analysis);
