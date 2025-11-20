@@ -38,6 +38,7 @@ export default function History() {
       date: "Just now",
       benefits: "Weight loss support, Metabolism boost, Fat burning",
       productImage: "/attached_assets/1-POTE_1763671886862.png",
+      url: "https://www.amazon.com/s?k=BellySlim+Weight+Loss+Gummies",
     },
     {
       id: "1",
@@ -45,13 +46,17 @@ export default function History() {
       brand: "Nature Made",
       score: 92,
       date: "2 hours ago",
+      benefits: "Bone health, Immune support, Cardiovascular health",
+      url: "https://www.amazon.com/Nature-Made-Vitamin-Softgels-Capsules/s?k=Nature+Made+D3+K2",
     },
     {
       id: "2",
       productName: "Daily Multivitamin Complex",
-      brand: "Generic Brand",
-      score: 45,
+      brand: "One A Day",
+      score: 72,
       date: "Yesterday",
+      benefits: "Energy, Immune support, Overall wellness",
+      url: "https://www.amazon.com/One-Day-Multivitamin-Complete-Vitamins/s?k=One+A+Day+Multivitamin",
     },
     {
       id: "3",
@@ -59,6 +64,8 @@ export default function History() {
       brand: "Nordic Naturals",
       score: 85,
       date: "3 days ago",
+      benefits: "Heart health, Brain function, Joint support",
+      url: "https://www.amazon.com/Nordic-Naturals-Omega-3-1000mg-Supplement/s?k=Nordic+Naturals+Omega+3",
     },
     {
       id: "4",
@@ -66,13 +73,17 @@ export default function History() {
       brand: "Doctor's Best",
       score: 78,
       date: "1 week ago",
+      benefits: "Sleep quality, Muscle relaxation, Stress relief",
+      url: "https://www.amazon.com/Doctors-Best-Magnesium-Glycinate-Supplement/s?k=Doctor+Best+Magnesium+Glycinate",
     },
     {
       id: "5",
       productName: "Super B-Complex",
       brand: "Now Foods",
-      score: 38,
+      score: 65,
       date: "2 weeks ago",
+      benefits: "Energy production, Metabolism support, Stress management",
+      url: "https://www.amazon.com/Now-Foods-Super-B-Complex-Supplement/s?k=Now+Foods+B+Complex",
     },
   ];
 
