@@ -1,15 +1,33 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Crown, DollarSign, Activity, Settings, LogOut, Loader2 } from "lucide-react";
+import { Crown, DollarSign, Activity, Settings, LogOut, Loader2, Heart, Zap, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
   const [userStatus, setUserStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const [profileData, setProfileData] = useState({
+    age: "",
+    weight: "",
+    height: "",
+    gender: "",
+    healthGoals: "",
+    allergies: "",
+    medications: "",
+    activityLevel: "",
+    dietType: "",
+  });
 
   useEffect(() => {
     loadUserStatus();
@@ -20,10 +38,47 @@ export default function Profile() {
       const { getUserStatusAPI } = await import("@/lib/api");
       const status = await getUserStatusAPI();
       setUserStatus(status);
+      if (status?.profile) {
+        setProfileData({
+          age: status.profile.age?.toString() || "",
+          weight: status.profile.weight?.toString() || "",
+          height: status.profile.height?.toString() || "",
+          gender: status.profile.gender || "",
+          healthGoals: status.profile.healthGoals || "",
+          allergies: status.profile.allergies || "",
+          medications: status.profile.medications || "",
+          activityLevel: status.profile.activityLevel || "",
+          dietType: status.profile.dietType || "",
+        });
+      }
     } catch (error) {
       console.error("Failed to load user status:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profileData),
+      });
+      setIsEditing(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your health profile has been saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save profile",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -121,6 +176,143 @@ export default function Profile() {
             </div>
           </Card>
         </div>
+
+        {/* Health Profile Section */}
+        <Card className="p-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-lg">Your Health Profile</h3>
+            </div>
+            <Button
+              size="sm"
+              variant={isEditing ? "default" : "outline"}
+              onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
+              disabled={isSaving}
+              data-testid={isEditing ? "button-save-profile" : "button-edit-profile"}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  Saving...
+                </>
+              ) : isEditing ? (
+                <>
+                  <Save className="w-4 h-4 mr-1" />
+                  Save Profile
+                </>
+              ) : (
+                "Edit Profile"
+              )}
+            </Button>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-6">
+            Help us find supplements tailored specifically to your needs
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Age</label>
+              <Input
+                type="number"
+                placeholder="e.g., 35"
+                value={profileData.age}
+                onChange={(e) => setProfileData({ ...profileData, age: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-age"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Gender</label>
+              <Input
+                placeholder="e.g., Male, Female, Other"
+                value={profileData.gender}
+                onChange={(e) => setProfileData({ ...profileData, gender: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-gender"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Weight (kg)</label>
+              <Input
+                type="number"
+                placeholder="e.g., 75"
+                value={profileData.weight}
+                onChange={(e) => setProfileData({ ...profileData, weight: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-weight"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Height (cm)</label>
+              <Input
+                type="number"
+                placeholder="e.g., 180"
+                value={profileData.height}
+                onChange={(e) => setProfileData({ ...profileData, height: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-height"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Activity Level</label>
+              <Input
+                placeholder="Sedentary, Light, Moderate, Active, Very Active"
+                value={profileData.activityLevel}
+                onChange={(e) => setProfileData({ ...profileData, activityLevel: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-activity"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Diet Type</label>
+              <Input
+                placeholder="Omnivore, Vegetarian, Vegan, Keto, etc"
+                value={profileData.dietType}
+                onChange={(e) => setProfileData({ ...profileData, dietType: e.target.value })}
+                disabled={!isEditing}
+                data-testid="input-diet"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Health Goals</label>
+              <Textarea
+                placeholder="e.g., Weight loss, Muscle gain, Immune support, Better sleep..."
+                value={profileData.healthGoals}
+                onChange={(e) => setProfileData({ ...profileData, healthGoals: e.target.value })}
+                disabled={!isEditing}
+                className="min-h-[80px]"
+                data-testid="input-health-goals"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Allergies</label>
+              <Textarea
+                placeholder="Comma-separated, e.g., Soy, Gluten, Shellfish"
+                value={profileData.allergies}
+                onChange={(e) => setProfileData({ ...profileData, allergies: e.target.value })}
+                disabled={!isEditing}
+                className="min-h-[60px]"
+                data-testid="input-allergies"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Current Medications</label>
+              <Textarea
+                placeholder="Comma-separated, e.g., Aspirin, Vitamin D"
+                value={profileData.medications}
+                onChange={(e) => setProfileData({ ...profileData, medications: e.target.value })}
+                disabled={!isEditing}
+                className="min-h-[60px]"
+                data-testid="input-medications"
+              />
+            </div>
+          </div>
+        </Card>
 
         <Card className="divide-y divide-border">
           <button

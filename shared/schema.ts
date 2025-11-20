@@ -11,7 +11,20 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   isPremium: boolean("is_premium").notNull().default(false),
   freeAnalysesUsed: integer("free_analyses_used").notNull().default(0),
+  
+  // Personal health profile
+  age: integer("age"),
+  weight: integer("weight"), // in kg
+  height: integer("height"), // in cm
+  gender: text("gender"), // male, female, other
+  healthGoals: text("health_goals"), // e.g., "weight loss, muscle gain, immune support"
+  allergies: text("allergies"), // comma-separated
+  medications: text("medications"), // comma-separated
+  activityLevel: text("activity_level"), // sedentary, light, moderate, active, very active
+  dietType: text("diet_type"), // omnivore, vegetarian, vegan, keto, etc
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

@@ -137,9 +137,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freeAnalysesUsed: user.freeAnalysesUsed,
         totalAnalyses: analyses.length,
         totalSavings: totalSavings / 100, // convert to dollars
+        profile: {
+          age: user.age,
+          weight: user.weight,
+          height: user.height,
+          gender: user.gender,
+          healthGoals: user.healthGoals,
+          allergies: user.allergies,
+          medications: user.medications,
+          activityLevel: user.activityLevel,
+          dietType: user.dietType,
+        },
       });
     } catch (error: any) {
       res.status(500).json({ message: "Error fetching user status: " + error.message });
+    }
+  });
+
+  // Update user profile
+  app.patch("/api/user/profile", async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { age, weight, height, gender, healthGoals, allergies, medications, activityLevel, dietType } = req.body;
+
+      const updated = await storage.updateUserProfile(userId, {
+        age: age ? parseInt(age) : undefined,
+        weight: weight ? parseInt(weight) : undefined,
+        height: height ? parseInt(height) : undefined,
+        gender,
+        healthGoals,
+        allergies,
+        medications,
+        activityLevel,
+        dietType,
+      });
+
+      res.json({
+        success: true,
+        profile: {
+          age: updated.age,
+          weight: updated.weight,
+          height: updated.height,
+          gender: updated.gender,
+          healthGoals: updated.healthGoals,
+          allergies: updated.allergies,
+          medications: updated.medications,
+          activityLevel: updated.activityLevel,
+          dietType: updated.dietType,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error updating profile: " + error.message });
     }
   });
 

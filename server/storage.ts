@@ -9,6 +9,17 @@ export interface IStorage {
   updateUserStripeInfo(userId: string, customerId: string, subscriptionId: string): Promise<User>;
   updateUserPremiumStatus(userId: string, isPremium: boolean): Promise<User>;
   incrementFreeAnalyses(userId: string): Promise<User>;
+  updateUserProfile(userId: string, profile: {
+    age?: number;
+    weight?: number;
+    height?: number;
+    gender?: string;
+    healthGoals?: string;
+    allergies?: string;
+    medications?: string;
+    activityLevel?: string;
+    dietType?: string;
+  }): Promise<User>;
   
   // Analysis management
   createAnalysis(analysis: InsertAnalysis): Promise<Analysis>;
@@ -39,6 +50,7 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
+    const now = new Date();
     const user: User = { 
       ...insertUser, 
       id,
@@ -46,7 +58,17 @@ export class MemStorage implements IStorage {
       stripeSubscriptionId: null,
       isPremium: false,
       freeAnalysesUsed: 0,
-      createdAt: new Date(),
+      age: null,
+      weight: null,
+      height: null,
+      gender: null,
+      healthGoals: null,
+      allergies: null,
+      medications: null,
+      activityLevel: null,
+      dietType: null,
+      createdAt: now,
+      updatedAt: now,
     };
     this.users.set(id, user);
     return user;
@@ -80,6 +102,36 @@ export class MemStorage implements IStorage {
     if (!user) throw new Error("User not found");
     
     const updated = { ...user, freeAnalysesUsed: user.freeAnalysesUsed + 1 };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async updateUserProfile(userId: string, profile: {
+    age?: number;
+    weight?: number;
+    height?: number;
+    gender?: string;
+    healthGoals?: string;
+    allergies?: string;
+    medications?: string;
+    activityLevel?: string;
+    dietType?: string;
+  }): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    
+    const updated = {
+      ...user,
+      age: profile.age ?? user.age,
+      weight: profile.weight ?? user.weight,
+      height: profile.height ?? user.height,
+      gender: profile.gender ?? user.gender,
+      healthGoals: profile.healthGoals ?? user.healthGoals,
+      allergies: profile.allergies ?? user.allergies,
+      medications: profile.medications ?? user.medications,
+      activityLevel: profile.activityLevel ?? user.activityLevel,
+      dietType: profile.dietType ?? user.dietType,
+    };
     this.users.set(userId, updated);
     return updated;
   }

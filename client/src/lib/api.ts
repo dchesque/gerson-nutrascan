@@ -39,6 +39,17 @@ export interface UserStatus {
   freeAnalysesUsed: number;
   totalAnalyses: number;
   totalSavings: number;
+  profile?: {
+    age: number | null;
+    weight: number | null;
+    height: number | null;
+    gender: string | null;
+    healthGoals: string | null;
+    allergies: string | null;
+    medications: string | null;
+    activityLevel: string | null;
+    dietType: string | null;
+  };
 }
 
 export interface HistoryItem {
