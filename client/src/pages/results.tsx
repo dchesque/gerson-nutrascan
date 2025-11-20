@@ -88,16 +88,36 @@ export default function Results() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load analysis from session storage
-    const storedAnalysis = sessionStorage.getItem("currentAnalysis");
-    if (storedAnalysis) {
-      setAnalysisData(JSON.parse(storedAnalysis));
-      setLoading(false);
-    } else {
-      // Fallback to mock data if no analysis found
+    const loadAnalysis = async () => {
+      // First try session storage
+      const storedAnalysis = sessionStorage.getItem("currentAnalysis");
+      if (storedAnalysis) {
+        setAnalysisData(JSON.parse(storedAnalysis));
+        setLoading(false);
+        return;
+      }
+
+      // Then try to load from backend if we have an ID
+      const analysisId = sessionStorage.getItem("currentAnalysisId");
+      if (analysisId) {
+        try {
+          const { getAnalysisAPI } = await import("@/lib/api");
+          const data = await getAnalysisAPI(analysisId);
+          setAnalysisData(data);
+          sessionStorage.setItem("currentAnalysis", JSON.stringify(data));
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error("Failed to load analysis from backend:", error);
+        }
+      }
+
+      // Fallback to mock data
       setAnalysisData(mockResult);
       setLoading(false);
-    }
+    };
+
+    loadAnalysis();
   }, []);
 
   const handleSubscribe = () => {

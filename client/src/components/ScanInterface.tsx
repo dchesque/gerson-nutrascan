@@ -16,7 +16,11 @@ export default function ScanInterface({ onAnalyze }: ScanInterfaceProps) {
 
   const handlePhotoUpload = () => {
     console.log("Photo upload triggered");
-    onAnalyze({ type: "photo", content: "Multivitamin with Vitamin D3 5000 IU, Vitamin C 1000mg, Zinc 25mg" });
+    // TODO: Implement actual photo upload and OCR
+    const text = prompt("Enter supplement label text (photo upload coming soon):");
+    if (text) {
+      onAnalyze({ type: "text", content: text });
+    }
   };
 
   const handleTextAnalyze = () => {
@@ -30,7 +34,11 @@ export default function ScanInterface({ onAnalyze }: ScanInterfaceProps) {
     setIsRecording(!isRecording);
     console.log(isRecording ? "Recording stopped" : "Recording started");
     if (isRecording) {
-      onAnalyze({ type: "voice", content: "Omega-3 Fish Oil 1000mg EPA 300mg DHA 200mg" });
+      // TODO: Implement actual voice recording and transcription
+      const text = prompt("Enter supplement description (voice input coming soon):");
+      if (text) {
+        onAnalyze({ type: "text", content: text });
+      }
     }
   };
 

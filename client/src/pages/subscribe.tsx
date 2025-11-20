@@ -1,18 +1,26 @@
 // Stripe subscription page - blueprint:javascript_stripe
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+// Lazy load Stripe only when key is available
+let stripePromise: Promise<Stripe | null> | null = null;
+
+function getStripePromise() {
+  if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+    return null;
+  }
+  if (!stripePromise) {
+    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  }
+  return stripePromise;
 }
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const SubscribeForm = () => {
   const stripe = useStripe();
@@ -80,6 +88,27 @@ const SubscribeForm = () => {
 export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState("");
   const [, setLocation] = useLocation();
+  const stripePromise = getStripePromise();
+
+  // Check if Stripe is configured
+  if (!stripePromise) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="p-6 max-w-md w-full">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold font-heading mb-2">Stripe Not Configured</h2>
+            <p className="text-muted-foreground mb-4">
+              Stripe payment integration requires API keys to be configured. Please add VITE_STRIPE_PUBLIC_KEY and STRIPE_SECRET_KEY to enable subscriptions.
+            </p>
+            <Button onClick={() => setLocation('/')} data-testid="button-back-home">
+              Back to Home
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   useEffect(() => {
     apiRequest("POST", "/api/create-subscription", {})
