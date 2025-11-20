@@ -8,13 +8,14 @@ import type { IngredientAnalysis, AlternativeProduct } from "@shared/schema";
 let openaiClient: OpenAI | null = null;
 
 function getOpenAI(): OpenAI {
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY1 || process.env.OPENAI_API_KEY;
+  if (!apiKey) {
     throw new Error("OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.");
   }
   
   if (!openaiClient) {
     // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    openaiClient = new OpenAI({ apiKey });
   }
   
   return openaiClient;
