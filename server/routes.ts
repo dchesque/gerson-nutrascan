@@ -3,27 +3,88 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { analyzeSupplementWithAI, getPersonalizedRecommendations } from "./ai";
 import Stripe from "stripe";
+import { createHash } from "crypto";
+import { signupSchema, loginSchema } from "@shared/schema";
 
 // Initialize Stripe if keys are present
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-11-17.clover" })
   : null;
 
+function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Simple session-based user tracking (no auth required for MVP)
+  // Auth routes MUST come before auth guard middleware
+  
+  // Signup
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const validated = signupSchema.parse(req.body);
+      
+      const existingUser = await storage.getUserByEmail(validated.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+      
+      const user = await storage.createUser({
+        email: validated.email,
+        passwordHash: hashPassword(validated.password),
+      });
+      
+      req.session.userId = user.id;
+      res.json({ success: true, userId: user.id });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Signup failed" });
+    }
+  });
+
+  // Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const validated = loginSchema.parse(req.body);
+      
+      const user = await storage.getUserByEmail(validated.email);
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      const isValid = await storage.verifyPassword(user.id, validated.password);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      req.session.userId = user.id;
+      res.json({ success: true, userId: user.id });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Login failed" });
+    }
+  });
+
+  // Logout
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) return res.status(500).json({ message: "Logout failed" });
+      res.json({ success: true });
+    });
+  });
+
+  // Check auth status
+  app.get("/api/auth/status", (req, res) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ authenticated: false });
+    }
+    res.json({ authenticated: true, userId: req.session.userId });
+  });
+
+  // Auth guard middleware - require login for all other routes
   app.use((req, res, next) => {
     if (!req.session.userId) {
-      // Create anonymous user for session
-      storage.createUser({ email: `anon-${Date.now()}@nutrascan.app` })
-        .then(user => {
-          req.session.userId = user.id;
-          next();
-        })
-        .catch(next);
-    } else {
-      next();
+      return res.status(401).json({ message: "Unauthorized" });
     }
+    next();
   });
 
   // Analyze supplement - main AI-powered analysis endpoint
