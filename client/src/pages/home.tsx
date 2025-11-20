@@ -10,7 +10,6 @@ import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight
 export default function Home() {
   const [, setLocation] = useLocation();
   const [showAIPopup, setShowAIPopup] = useState(false);
-  const [activeTab, setActiveTab] = useState<"features" | "scanner">("features");
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
@@ -84,19 +83,11 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
-                onClick={() => setActiveTab("scanner")}
+                onClick={() => setShowAIPopup(true)}
                 className="bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg transition-all"
                 data-testid="button-start-scan"
               >
-                Start Scanning <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => setShowAIPopup(true)}
-                data-testid="button-get-advice"
-              >
-                Get AI Advice
+                Get AI Advice <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           </div>
@@ -129,142 +120,117 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features & Scanner Toggle */}
+        {/* Features Section */}
         <section className="py-12">
-          <div className="flex gap-4 mb-8 border-b border-border">
-            <button
-              onClick={() => setActiveTab("features")}
-              className={`pb-4 font-semibold transition-colors ${
-                activeTab === "features"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              data-testid="tab-features"
-            >
-              Features
-            </button>
-            <button
-              onClick={() => setActiveTab("scanner")}
-              className={`pb-4 font-semibold transition-colors ${
-                activeTab === "scanner"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              data-testid="tab-scanner"
-            >
-              Start Scanning
-            </button>
-          </div>
-
-          {/* Features Tab */}
-          {activeTab === "features" && (
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Shield className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-2">AI-Powered Analysis</h3>
-                    <p className="text-muted-foreground">
-                      Advanced AI evaluates every ingredient, dosage, and brand reputation for scientific accuracy.
-                    </p>
-                  </div>
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+            <div className="space-y-6">
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-primary" />
                 </div>
-
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <DollarSign className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-2">Find Better Deals</h3>
-                    <p className="text-muted-foreground">
-                      Discover higher-quality alternatives online and at nearby stores with instant price comparisons.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-2">Score Everything</h3>
-                    <p className="text-muted-foreground">
-                      Get a comprehensive 0-100 score based on effectiveness, dosage accuracy, and value for money.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Zap className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-2">Smart Recommendations</h3>
-                    <p className="text-muted-foreground">
-                      AI chatbot provides personalized supplement recommendations based on your health goals.
-                    </p>
-                  </div>
+                <div>
+                  <h3 className="font-semibold font-heading mb-2">AI-Powered Analysis</h3>
+                  <p className="text-muted-foreground">
+                    Advanced AI evaluates every ingredient, dosage, and brand reputation for scientific accuracy.
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center">
-                <Card className="p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 w-full">
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-bold font-heading">Why NutraScan?</h3>
-                    <ul className="space-y-3">
-                      {[
-                        "Scan supplements in seconds",
-                        "Get scientific analysis instantly",
-                        "Compare with verified alternatives",
-                        "Track all your scans",
-                        "Save hundreds annually",
-                        "Share results with friends"
-                      ].map((benefit, i) => (
-                        <li key={i} className="flex items-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                          <span className="text-foreground">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </Card>
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <DollarSign className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold font-heading mb-2">Find Better Deals</h3>
+                  <p className="text-muted-foreground">
+                    Discover higher-quality alternatives online and at nearby stores with instant price comparisons.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold font-heading mb-2">Score Everything</h3>
+                  <p className="text-muted-foreground">
+                    Get a comprehensive 0-100 score based on effectiveness, dosage accuracy, and value for money.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold font-heading mb-2">Smart Recommendations</h3>
+                  <p className="text-muted-foreground">
+                    AI chatbot provides personalized supplement recommendations based on your health goals.
+                  </p>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Scanner Tab */}
-          {activeTab === "scanner" && (
-            <div className="space-y-8">
-              <ScanInterface onAnalyze={handleAnalyze} />
-
-              <Card className="p-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
-                <h3 className="font-semibold font-heading mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  What You'll Get:
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="flex gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="text-sm">Quality score (0-100) based on science</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="text-sm">Ingredient-by-ingredient analysis</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="text-sm">Better alternatives (online & local)</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="text-sm">Estimated savings per purchase</span>
-                  </div>
+            <div className="flex items-center justify-center">
+              <Card className="p-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 w-full">
+                <div className="space-y-4">
+                  <h3 className="text-2xl font-bold font-heading">Why NutraScan?</h3>
+                  <ul className="space-y-3">
+                    {[
+                      "Scan supplements in seconds",
+                      "Get scientific analysis instantly",
+                      "Compare with verified alternatives",
+                      "Track all your scans",
+                      "Save hundreds annually",
+                      "Share results with friends"
+                    ].map((benefit, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                        <span className="text-foreground">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </Card>
             </div>
-          )}
+          </div>
+        </section>
+
+        {/* Scan Section */}
+        <section className="py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold font-heading mb-2">Scan Your Supplement</h2>
+            <p className="text-muted-foreground">Get instant analysis in three easy ways</p>
+          </div>
+
+          <ScanInterface onAnalyze={handleAnalyze} />
+
+          <Card className="p-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/20 mt-8">
+            <h3 className="font-semibold font-heading mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              What You'll Get:
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="flex gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Quality score (0-100) based on science</span>
+              </div>
+              <div className="flex gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Ingredient-by-ingredient analysis</span>
+              </div>
+              <div className="flex gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Better alternatives (online & local)</span>
+              </div>
+              <div className="flex gap-2">
+                <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                <span className="text-sm">Estimated savings per purchase</span>
+              </div>
+            </div>
+          </Card>
         </section>
 
         {/* Pricing Section */}
