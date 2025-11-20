@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Check auth status
+  // Check auth status (public - no auth required)
   app.get("/api/auth/status", (req, res) => {
     if (!req.session.userId) {
       return res.status(401).json({ authenticated: false });
@@ -79,8 +79,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ authenticated: true, userId: req.session.userId });
   });
 
-  // Auth guard middleware - require login for all other routes
-  app.use((req, res, next) => {
+  // Auth guard middleware - require login for ALL /api/* routes EXCEPT auth routes
+  app.use("/api", (req, res, next) => {
+    // Allow public auth routes
+    if (req.path.startsWith("/auth")) {
+      return next();
+    }
+    
+    // Require auth for all other API routes
     if (!req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
