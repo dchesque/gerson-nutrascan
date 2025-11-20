@@ -70,40 +70,40 @@ export default function Home() {
 
       <main className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5">
         {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 py-24 md:py-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+        <section className="max-w-7xl mx-auto px-4 py-16 md:py-32">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="space-y-6 md:space-y-8">
               <div className="space-y-4">
-                <div className="inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                  <p className="text-sm font-medium text-primary flex items-center gap-1">
-                    <Rocket className="w-4 h-4" />
+                <div className="inline-block px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                  <p className="text-xs md:text-sm font-medium text-primary flex items-center gap-1">
+                    <Rocket className="w-3 h-3 md:w-4 md:h-4" />
                     100% Free - No Credit Card Needed
                   </p>
                 </div>
                 
-                <h1 className="text-6xl md:text-7xl font-bold font-heading leading-tight">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-heading leading-tight">
                   Discover the Truth About Your <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">Supplements</span>
                 </h1>
                 
-                <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
+                <p className="text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
                   Get AI-powered analysis of any supplement in seconds. See quality scores, ingredient breakdown, and better alternatives. Completely free to try.
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                 <Button 
                   size="lg" 
                   onClick={handleSignup}
-                  className="bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg transition-all text-lg font-semibold"
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:shadow-lg transition-all font-semibold w-full sm:w-auto"
                   data-testid="button-get-started"
                 >
-                  Start Testing Free <ArrowRight className="w-5 h-5 ml-2" />
+                  Start Testing Free <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline"
                   onClick={() => setShowAIPopup(true)}
-                  className="text-lg"
+                  className="w-full sm:w-auto"
                   data-testid="button-ai-help"
                 >
                   Get AI Advice
@@ -169,19 +169,19 @@ export default function Home() {
         </section>
 
         {/* Social Proof */}
-        <section className="max-w-7xl mx-auto px-4 py-16 border-y border-border">
-          <div className="grid md:grid-cols-3 gap-8">
+        <section className="max-w-7xl mx-auto px-4 py-12 md:py-16 border-y border-border">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8">
             <div className="text-center">
-              <p className="text-4xl font-bold font-heading mb-2">50K+</p>
-              <p className="text-muted-foreground">Supplements Analyzed for Free</p>
+              <p className="text-3xl sm:text-4xl font-bold font-heading mb-2">50K+</p>
+              <p className="text-sm md:text-base text-muted-foreground">Supplements Analyzed for Free</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold font-heading mb-2">$12M+</p>
-              <p className="text-muted-foreground">Saved by Free Users</p>
+              <p className="text-3xl sm:text-4xl font-bold font-heading mb-2">$12M+</p>
+              <p className="text-sm md:text-base text-muted-foreground">Saved by Free Users</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold font-heading mb-2">4.9/5</p>
-              <p className="text-muted-foreground">Rating from 10K+ Users</p>
+              <p className="text-3xl sm:text-4xl font-bold font-heading mb-2">4.9/5</p>
+              <p className="text-sm md:text-base text-muted-foreground">Rating from 10K+ Users</p>
             </div>
           </div>
         </section>
@@ -259,70 +259,70 @@ export default function Home() {
         </section>
 
         {/* App Interface Preview */}
-        <section className="max-w-7xl mx-auto px-4 py-24">
-          <div className="text-center mb-16">
-            <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Smartphone className="w-6 h-6 text-primary" />
+        <section className="max-w-7xl mx-auto px-4 py-16 md:py-24">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="flex justify-center mb-3 md:mb-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Smartphone className="w-5 h-5 md:w-6 md:h-6 text-primary" />
               </div>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold font-heading mb-4">See What's Inside</h2>
-            <p className="text-lg text-muted-foreground">Our intuitive interface makes analyzing supplements incredibly simple</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-2 md:mb-4">See What's Inside</h2>
+            <p className="text-base md:text-lg text-muted-foreground">Our intuitive interface makes analyzing supplements incredibly simple</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">1. Scan a Supplement</p>
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-3 md:p-4">
+                <p className="text-xs md:text-sm font-semibold text-primary mb-2 md:mb-3">1. Scan a Supplement</p>
                 <img 
                   src={cameraScreen} 
                   alt="Scan any supplement with camera" 
-                  className="w-full rounded-lg border border-primary/20"
+                  className="w-full rounded-lg border border-primary/20 h-48 md:h-auto object-cover"
                 />
               </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Take a photo of any supplement bottle and let our AI analyze it instantly</p>
+              <div className="p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">Take a photo of any supplement bottle and let our AI analyze it instantly</p>
               </div>
             </Card>
 
             <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">2. Get Instant Results</p>
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-3 md:p-4">
+                <p className="text-xs md:text-sm font-semibold text-primary mb-2 md:mb-3">2. Get Instant Results</p>
                 <img 
                   src={resultsScreen} 
                   alt="Get instant supplement analysis results" 
-                  className="w-full rounded-lg border border-primary/20"
+                  className="w-full rounded-lg border border-primary/20 h-48 md:h-auto object-cover"
                 />
               </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">See quality scores, ingredient breakdown, and better alternatives in seconds</p>
+              <div className="p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">See quality scores, ingredient breakdown, and better alternatives in seconds</p>
               </div>
             </Card>
 
             <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">3. Track Your History</p>
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-3 md:p-4">
+                <p className="text-xs md:text-sm font-semibold text-primary mb-2 md:mb-3">3. Track Your History</p>
                 <img 
                   src={historyScreen} 
                   alt="Keep track of all your supplement analysis history" 
-                  className="w-full rounded-lg border border-primary/20"
+                  className="w-full rounded-lg border border-primary/20 h-48 md:h-auto object-cover"
                 />
               </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Keep a complete record of all your analyses and track improvements over time</p>
+              <div className="p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">Keep a complete record of all your analyses and track improvements over time</p>
               </div>
             </Card>
           </div>
         </section>
 
         {/* How It Works */}
-        <section className="max-w-7xl mx-auto px-4 py-24 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-heading mb-4">Get Started in 3 Steps</h2>
-            <p className="text-lg text-muted-foreground">Try it free, right now</p>
+        <section className="max-w-7xl mx-auto px-4 py-16 md:py-24 bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl md:rounded-2xl">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-heading mb-2 md:mb-4">Get Started in 3 Steps</h2>
+            <p className="text-base md:text-lg text-muted-foreground">Try it free, right now</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             {[
               {
                 step: 1,
@@ -341,25 +341,25 @@ export default function Home() {
               }
             ].map((item) => (
               <div key={item.step} className="relative">
-                <div className="absolute -top-6 left-0 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                <div className="absolute -top-4 md:-top-6 left-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-base md:text-lg">
                   {item.step}
                 </div>
-                <Card className="p-6 pt-10 bg-background border-primary/20">
-                  <h3 className="font-bold font-heading mb-2 text-lg">{item.title}</h3>
-                  <p className="text-muted-foreground">{item.description}</p>
+                <Card className="p-4 md:p-6 pt-8 md:pt-10 bg-background border-primary/20">
+                  <h3 className="font-bold font-heading mb-2 text-base md:text-lg">{item.title}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground">{item.description}</p>
                 </Card>
               </div>
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 md:mt-12">
             <Button 
               size="lg"
               onClick={handleSignup}
-              className="bg-gradient-to-r from-primary to-primary/90 text-lg font-semibold"
+              className="bg-gradient-to-r from-primary to-primary/90 font-semibold w-full sm:w-auto"
               data-testid="button-how-it-works-signup"
             >
-              Start Free Now <ArrowRight className="w-5 h-5 ml-2" />
+              Start Free Now <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </section>
