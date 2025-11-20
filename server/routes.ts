@@ -6,7 +6,7 @@ import Stripe from "stripe";
 
 // Initialize Stripe if keys are present
 const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-11-17.clover" })
   : null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -172,12 +172,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // If already has subscription, return existing
         if (user.stripeSubscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-          const invoice = await stripe.invoices.retrieve(subscription.latest_invoice as string);
+          const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
+            expand: ['latest_invoice.payment_intent']
+          });
+          const latestInvoice: any = subscription.latest_invoice;
           
           return res.json({
             subscriptionId: subscription.id,
-            clientSecret: (invoice.payment_intent as any)?.client_secret,
+            clientSecret: latestInvoice?.payment_intent?.client_secret,
           });
         }
 
@@ -186,24 +188,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
         });
 
-        // Create subscription with $9.99/month price
+        // Create a price for the subscription
+        const price = await stripe.prices.create({
+          currency: "usd",
+          unit_amount: 999, // $9.99 in cents
+          recurring: { interval: "month" },
+          product_data: {
+            name: "NutraScan AI Premium",
+            description: "Unlimited supplement analyses",
+          },
+        });
+
+        // Create subscription
         const subscription = await stripe.subscriptions.create({
           customer: customer.id,
-          items: [
-            {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name: "NutraScan AI Premium",
-                  description: "Unlimited supplement analyses",
-                },
-                unit_amount: 999, // $9.99 in cents
-                recurring: {
-                  interval: "month",
-                },
-              },
-            },
-          ],
+          items: [{ price: price.id }],
           payment_behavior: "default_incomplete",
           expand: ["latest_invoice.payment_intent"],
         });
