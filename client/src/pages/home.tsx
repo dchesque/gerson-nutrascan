@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight, Star, Lightbulb, Lock, Rocket, Brain, Smartphone } from "lucide-react";
-import scanScreen from "@assets/real_screenshots/scan-interface.png";
-import resultsScreen from "@assets/real_screenshots/results-screen.png";
+import cameraScreen from "@assets/generated_images/camera_scan_interface.png";
+import resultsScreen from "@assets/generated_images/supplement_analysis_results_screen.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -297,22 +297,16 @@ export default function Home() {
             <div className="space-y-4">
               <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
                 <img 
-                  src={scanScreen} 
-                  alt="Real app scan interface" 
+                  src={cameraScreen} 
+                  alt="Scan any supplement with camera" 
                   className="w-full"
-                  onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='960'%3E%3Crect fill='%23f5f5f5' width='480' height='960'/%3E%3Ctext x='240' y='480' text-anchor='middle' fill='%23999' font-size='20'%3ELoading screenshot...%3C/text%3E%3C/svg%3E";
-                  }}
                 />
               </Card>
               <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
                 <img 
                   src={resultsScreen} 
-                  alt="Real app results screen" 
+                  alt="Get instant supplement analysis results" 
                   className="w-full"
-                  onError={(e) => {
-                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='960'%3E%3Crect fill='%23f5f5f5' width='480' height='960'/%3E%3Ctext x='240' y='480' text-anchor='middle' fill='%23999' font-size='20'%3ELoading screenshot...%3C/text%3E%3C/svg%3E";
-                  }}
                 />
               </Card>
             </div>
