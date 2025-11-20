@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Camera, FileText, Mic, Upload, Copy, X, AlertCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import { Camera, FileText, Mic, Upload, Copy, X, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -14,17 +14,61 @@ interface ScanInterfaceProps {
 const EXAMPLE_TEXT = "Vitamin D3 5000 IU, Vitamin C 1000mg, Zinc 25mg, Magnesium 400mg, Calcium 800mg";
 
 export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInterfaceProps) {
-  const [activeTab, setActiveTab] = useState<"photo" | "text" | "voice">("text");
+  const [activeTab, setActiveTab] = useState<"photo" | "text" | "voice">("photo");
   const [textInput, setTextInput] = useState("");
   const [benefitsInput, setBenefitsInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handlePhotoUpload = () => {
-    console.log("Photo upload triggered");
-    const text = prompt("Enter supplement label text (photo upload coming soon):");
-    if (text?.trim()) {
-      onAnalyze({ type: "text", content: text });
+  const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        setPhotoPreview(base64);
+        console.log("Photo captured and converted to base64");
+        toast({
+          title: "Photo Captured",
+          description: "Click 'Analyze Photo' to process the supplement label",
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error processing photo:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process photo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessingPhoto(false);
+    }
+  };
+
+  const handleAnalyzePhoto = () => {
+    if (!photoPreview) {
+      toast({
+        title: "No Photo",
+        description: "Please take or select a photo first",
+        variant: "destructive"
+      });
+      return;
+    }
+    console.log("Photo analysis triggered");
+    onAnalyze({ type: "photo", content: photoPreview });
+  };
+
+  const handleClearPhoto = () => {
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -82,13 +126,13 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
     <Card className="p-6" data-testid="scan-interface">
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="text" data-testid="tab-text" disabled={isLoading}>
-            <FileText className="w-4 h-4 mr-2" />
-            Text
-          </TabsTrigger>
           <TabsTrigger value="photo" data-testid="tab-photo" disabled={isLoading}>
             <Camera className="w-4 h-4 mr-2" />
             Photo
+          </TabsTrigger>
+          <TabsTrigger value="text" data-testid="tab-text" disabled={isLoading}>
+            <FileText className="w-4 h-4 mr-2" />
+            Text
           </TabsTrigger>
           <TabsTrigger value="voice" data-testid="tab-voice" disabled={isLoading}>
             <Mic className="w-4 h-4 mr-2" />
@@ -173,24 +217,79 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
 
         {/* Photo Tab */}
         <TabsContent value="photo" className="space-y-4">
-          <div className="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border rounded-lg bg-muted/30 p-6">
-            <Upload className="w-16 h-16 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4 text-center px-4 font-medium">
-              Take a photo of the supplement label
-            </p>
-            <p className="text-muted-foreground mb-6 text-center px-4 text-sm">
-              Coming soon: Full OCR support. For now, type the ingredients instead.
-            </p>
-            <Button
-              onClick={handlePhotoUpload}
-              size="lg"
-              disabled={isLoading}
-              data-testid="button-upload-photo"
-            >
-              <Camera className="w-5 h-5 mr-2" />
-              Upload Photo
-            </Button>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhotoCapture}
+            className="hidden"
+            data-testid="input-photo-capture"
+          />
+          
+          {photoPreview ? (
+            <div className="space-y-4">
+              <div className="relative">
+                <img
+                  src={photoPreview}
+                  alt="Captured supplement"
+                  className="w-full rounded-lg border border-border object-contain max-h-[400px]"
+                  data-testid="preview-photo"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleAnalyzePhoto}
+                  size="lg"
+                  className="flex-1"
+                  disabled={isLoading || isProcessingPhoto}
+                  data-testid="button-analyze-photo"
+                >
+                  {isLoading || isProcessingPhoto ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-5 h-5 mr-2" />
+                      Analyze Photo
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleClearPhoto}
+                  variant="outline"
+                  size="lg"
+                  disabled={isLoading || isProcessingPhoto}
+                  data-testid="button-clear-photo"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border rounded-lg bg-muted/30 p-6">
+              <div className="rounded-full bg-primary/10 p-4 mb-4">
+                <Camera className="w-12 h-12 text-primary" />
+              </div>
+              <p className="text-muted-foreground mb-2 text-center px-4 font-medium">
+                Take a photo of the supplement label
+              </p>
+              <p className="text-muted-foreground mb-6 text-center px-4 text-sm">
+                Point your camera at the supplement facts label for instant analysis
+              </p>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                size="lg"
+                disabled={isLoading || isProcessingPhoto}
+                data-testid="button-upload-photo"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                {isProcessingPhoto ? "Processing..." : "Take Photo"}
+              </Button>
+            </div>
+          )}
         </TabsContent>
 
         {/* Voice Tab */}
