@@ -31,6 +31,15 @@ export default function History() {
 
   const mockHistory = [
     {
+      id: "0",
+      productName: "BellySlim",
+      brand: "BellySlim",
+      score: 28,
+      date: "Just now",
+      benefits: "Weight loss support, Metabolism boost, Fat burning",
+      productImage: "/attached_assets/1-POTE_1763671886862.png",
+    },
+    {
       id: "1",
       productName: "Premium Vitamin D3 + K2",
       brand: "Nature Made",
