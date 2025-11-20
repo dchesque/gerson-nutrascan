@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight, Star, Lightbulb, Lock, Rocket, Brain } from "lucide-react";
-import cameraScreen from "@assets/generated_images/camera_scan_interface.png";
-import resultsScreen from "@assets/generated_images/supplement_analysis_results_screen.png";
-import historyScreen from "@assets/generated_images/scan_history_page.png";
+import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight, Star, Lightbulb, Lock, Rocket, Brain, Smartphone } from "lucide-react";
+import scanScreen from "@assets/real_screenshots/scan-interface.png";
+import resultsScreen from "@assets/real_screenshots/results-screen.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -258,55 +257,65 @@ export default function Home() {
           </div>
         </section>
 
-        {/* App Interface Preview */}
+        {/* Real App Interface Preview */}
         <section className="max-w-7xl mx-auto px-4 py-24">
           <div className="text-center mb-16">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-primary" />
+              </div>
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold font-heading mb-4">See What's Inside</h2>
-            <p className="text-lg text-muted-foreground">Our intuitive interface makes analyzing supplements incredibly simple</p>
+            <p className="text-lg text-muted-foreground">Real app screenshots showing how simple analyzing supplements can be</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">1. Scan a Supplement</p>
-                <img 
-                  src={cameraScreen} 
-                  alt="Camera scan interface" 
-                  className="w-full rounded-lg border border-primary/20"
-                />
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-bold font-heading mb-2 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">1</span>
+                  Scan Any Supplement
+                </h3>
+                <p className="text-muted-foreground">Point your camera at any supplement bottle. Our AI instantly reads the label and begins analysis.</p>
               </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Take a photo of any supplement bottle and let our AI analyze it instantly</p>
+              <div>
+                <h3 className="text-xl font-bold font-heading mb-2 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">2</span>
+                  Get Instant Results
+                </h3>
+                <p className="text-muted-foreground">See your supplement's quality score (0-100), ingredient analysis, and cost-effective alternatives in seconds.</p>
               </div>
-            </Card>
+              <Button 
+                size="lg" 
+                onClick={() => setLocation("/scan")}
+                className="bg-gradient-to-r from-primary to-primary/90 text-lg font-semibold"
+              >
+                Try It Free Now <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
 
-            <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">2. Get Instant Results</p>
+            <div className="space-y-4">
+              <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
+                <img 
+                  src={scanScreen} 
+                  alt="Real app scan interface" 
+                  className="w-full"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='960'%3E%3Crect fill='%23f5f5f5' width='480' height='960'/%3E%3Ctext x='240' y='480' text-anchor='middle' fill='%23999' font-size='20'%3ELoading screenshot...%3C/text%3E%3C/svg%3E";
+                  }}
+                />
+              </Card>
+              <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
                 <img 
                   src={resultsScreen} 
-                  alt="Analysis results screen" 
-                  className="w-full rounded-lg border border-primary/20"
+                  alt="Real app results screen" 
+                  className="w-full"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='960'%3E%3Crect fill='%23f5f5f5' width='480' height='960'/%3E%3Ctext x='240' y='480' text-anchor='middle' fill='%23999' font-size='20'%3ELoading screenshot...%3C/text%3E%3C/svg%3E";
+                  }}
                 />
-              </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">See quality scores, ingredient breakdown, and better alternatives in seconds</p>
-              </div>
-            </Card>
-
-            <Card className="overflow-hidden hover-elevate border-primary/20">
-              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
-                <p className="text-sm font-semibold text-primary mb-3">3. Track Your History</p>
-                <img 
-                  src={historyScreen} 
-                  alt="Scan history page" 
-                  className="w-full rounded-lg border border-primary/20"
-                />
-              </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Keep a complete record of all your analyses and track improvements over time</p>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
         </section>
 
