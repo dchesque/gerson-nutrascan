@@ -79,31 +79,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ authenticated: true, userId: req.session.userId });
   });
 
-  // Auth guard middleware - allow /analyze without auth (1 free analysis), require auth for others
+  // Auth guard middleware - require auth for all API routes except /auth
   app.use("/api", (req, res, next) => {
     // Allow public auth routes
     if (req.path.startsWith("/auth")) {
       return next();
     }
     
-    // Allow /analyze without auth for first free analysis
-    if (req.path === "/analyze" && req.method === "POST") {
-      return next();
-    }
-    
-    // Allow getting analysis results by ID without auth
-    if (req.path.match(/^\/analysis\/[^/]+$/) && req.method === "GET") {
-      return next();
-    }
-    
     // Require auth for all other API routes
     if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized - Please login or signup" });
     }
     next();
   });
 
-  // Analyze supplement - main AI-powered analysis endpoint (PUBLIC - allows 1 free without login)
+  // Analyze supplement - main AI-powered analysis endpoint (REQUIRES AUTH)
   app.post("/api/analyze", async (req, res) => {
     try {
       const { type, content } = req.body;
@@ -112,33 +102,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      let userId = req.session.userId;
-      let user = null;
-
-      // If user is not authenticated, create anonymous user
+      // Require authentication
+      const userId = req.session.userId;
       if (!userId) {
-        const anonUser = await storage.createUser({ 
-          email: `anon-${Date.now()}-${Math.random()}@nutrascan.app`,
-          passwordHash: null 
-        });
-        userId = anonUser.id;
-        req.session.userId = userId;
-        user = anonUser;
-      } else {
-        user = await storage.getUser(userId);
+        return res.status(401).json({ message: "Authentication required. Please sign up or login." });
       }
 
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
-      }
-
-      // Check free analysis limit (1 free without auth, unlimited with premium)
-      if (!user.isPremium && user.freeAnalysesUsed >= 1) {
-        return res.status(403).json({ 
-          message: "Free analysis limit reached. Sign up for unlimited analyses.",
-          requiresUpgrade: true,
-          requiresAuth: true
-        });
       }
 
       // Perform AI analysis
@@ -157,11 +129,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         onlineAlternatives: analysisResult.onlineAlternatives as any,
         localAlternatives: analysisResult.localAlternatives as any,
       });
-
-      // Increment free analyses count if not premium
-      if (!user.isPremium) {
-        await storage.incrementFreeAnalyses(userId);
-      }
 
       res.json({
         analysisId: analysis.id,

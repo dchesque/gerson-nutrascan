@@ -33,18 +33,30 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/auth" component={Auth} />
-        {/* Public scan - allows 1 free analysis without login */}
-        <Route path="/scan" component={isAuthenticated ? Scan : ScanFree} />
-        <Route path="/results" component={Results} />
         
-        {/* Require auth for these */}
+        {/* Require auth for all features */}
         {isAuthenticated && (
           <>
+            <Route path="/scan" component={Scan} />
+            <Route path="/results" component={Results} />
             <Route path="/history" component={History} />
             <Route path="/profile" component={Profile} />
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/settings" component={Settings} />
+          </>
+        )}
+        
+        {/* Redirect to auth if not authenticated */}
+        {!isAuthenticated && (
+          <>
+            <Route path="/scan" component={Auth} />
+            <Route path="/results" component={Auth} />
+            <Route path="/history" component={Auth} />
+            <Route path="/profile" component={Auth} />
+            <Route path="/subscribe" component={Auth} />
+            <Route path="/pricing" component={Auth} />
+            <Route path="/settings" component={Auth} />
           </>
         )}
         
