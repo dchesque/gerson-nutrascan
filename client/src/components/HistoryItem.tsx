@@ -9,10 +9,11 @@ interface HistoryItemProps {
   brand: string;
   score: number;
   date: string;
+  benefits?: string;
   onClick: () => void;
 }
 
-export default function HistoryItem({ id, productName, brand, score, date, onClick }: HistoryItemProps) {
+export default function HistoryItem({ id, productName, brand, score, date, benefits, onClick }: HistoryItemProps) {
   const getScoreColor = (score: number) => {
     if (score >= 71) return "bg-primary text-primary-foreground";
     if (score >= 41) return "bg-chart-4 text-white";
@@ -33,6 +34,11 @@ export default function HistoryItem({ id, productName, brand, score, date, onCli
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-base truncate">{productName}</h4>
           <div className="text-sm text-muted-foreground truncate">{brand}</div>
+          {benefits && (
+            <div className="text-xs text-primary mt-1 truncate">
+              💡 {benefits}
+            </div>
+          )}
           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
             <span>{date}</span>

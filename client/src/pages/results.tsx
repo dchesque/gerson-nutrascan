@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
-import { ArrowLeft, DollarSign, TrendingUp, Loader2 } from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingUp, Loader2, Bell, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import ScoreDisplay from "@/components/ScoreDisplay";
 import IngredientCard from "@/components/IngredientCard";
 import AlternativeCard from "@/components/AlternativeCard";
@@ -14,6 +16,7 @@ const mockResult = {
     brand: "Generic Brand",
     score: 45,
     totalSavings: 12.50,
+    benefits: "Immune support, Energy, Overall health",
     ingredients: [
       {
         name: "Vitamin D3",
@@ -86,6 +89,9 @@ export default function Results() {
   const [showPaywall, setShowPaywall] = useState(searchString.includes("showPaywall=true"));
   const [analysisData, setAnalysisData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [monitorPrice, setMonitorPrice] = useState(false);
+  const [targetPrice, setTargetPrice] = useState("");
+  const [showPriceAlert, setShowPriceAlert] = useState(false);
 
   useEffect(() => {
     const loadAnalysis = async () => {
@@ -125,6 +131,16 @@ export default function Results() {
     setLocation("/subscribe");
   };
 
+  const handleSetPriceAlert = () => {
+    if (!targetPrice) {
+      alert("Please enter a target price");
+      return;
+    }
+    console.log("Price alert set for:", result.productName, "at $" + targetPrice);
+    setShowPriceAlert(false);
+    setMonitorPrice(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -158,6 +174,14 @@ export default function Results() {
         <div className="flex justify-center">
           <ScoreDisplay score={result.score} />
         </div>
+
+        {/* Benefits Section */}
+        {result.benefits && (
+          <Card className="p-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <p className="text-sm text-muted-foreground mb-1">This supplement helps with:</p>
+            <p className="font-semibold text-foreground">{result.benefits}</p>
+          </Card>
+        )}
 
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -213,7 +237,61 @@ export default function Results() {
           </TabsContent>
         </Tabs>
 
-        <div className="pt-4">
+        {/* Price Monitoring Section */}
+        <Card className="p-4 bg-gradient-to-r from-chart-4/10 to-chart-4/5 border-chart-4/20">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="w-5 h-5 text-chart-4" />
+              <h4 className="font-semibold">Price Drop Alert</h4>
+            </div>
+            <Button
+              variant={monitorPrice ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowPriceAlert(!showPriceAlert)}
+              data-testid="button-price-alert"
+            >
+              {monitorPrice ? "Alert Active" : "Set Alert"}
+            </Button>
+          </div>
+
+          {showPriceAlert && (
+            <div className="space-y-3 mt-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Notify me when price drops below:</label>
+                <div className="flex gap-2">
+                  <span className="text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder="Enter price"
+                    value={targetPrice}
+                    onChange={(e) => setTargetPrice(e.target.value)}
+                    step="0.01"
+                    min="0"
+                    data-testid="input-target-price"
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleSetPriceAlert}
+                size="sm"
+                className="w-full"
+                data-testid="button-confirm-alert"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Set Price Alert
+              </Button>
+            </div>
+          )}
+
+          {monitorPrice && !showPriceAlert && (
+            <p className="text-sm text-chart-4 font-medium">
+              ✓ You'll be notified when this supplement drops to ${targetPrice}
+            </p>
+          )}
+        </Card>
+
+        <div className="pt-4 space-y-3">
           <Button
             className="w-full"
             size="lg"
@@ -221,6 +299,15 @@ export default function Results() {
             data-testid="button-analyze-another"
           >
             Analyze Another Supplement
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() => setLocation("/")}
+            data-testid="button-back-home"
+          >
+            Back to Home
           </Button>
         </div>
       </main>

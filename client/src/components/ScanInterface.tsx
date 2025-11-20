@@ -16,6 +16,7 @@ const EXAMPLE_TEXT = "Vitamin D3 5000 IU, Vitamin C 1000mg, Zinc 25mg, Magnesium
 export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInterfaceProps) {
   const [activeTab, setActiveTab] = useState<"photo" | "text" | "voice">("text");
   const [textInput, setTextInput] = useState("");
+  const [benefitsInput, setBenefitsInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
 
@@ -46,8 +47,9 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
       return;
     }
 
-    console.log("Text analysis triggered:", textInput);
-    onAnalyze({ type: "text", content: textInput });
+    console.log("Text analysis triggered:", textInput, "Benefits:", benefitsInput);
+    const content = benefitsInput.trim() ? `${textInput}\n\nBenefits: ${benefitsInput}` : textInput;
+    onAnalyze({ type: "text", content });
   };
 
   const handleVoiceRecord = () => {
@@ -114,6 +116,20 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
               data-testid="input-text-supplement"
               disabled={isLoading}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">What will this supplement help with?</label>
+            <Textarea
+              placeholder="e.g., Immune support, Energy, Better sleep, Joint health..."
+              value={benefitsInput}
+              onChange={(e) => setBenefitsInput(e.target.value)}
+              className="min-h-[80px] text-base"
+              data-testid="input-benefits"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">This helps us give better recommendations and track what's working for you</p>
+          </div>
 
             <div className="flex gap-2">
               <Button

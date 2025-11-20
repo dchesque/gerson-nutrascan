@@ -37,6 +37,13 @@ export const analyses = pgTable("analyses", {
   onlineAlternatives: jsonb("online_alternatives"), // Array of alternative products
   localAlternatives: jsonb("local_alternatives"), // Array of local store alternatives
   
+  // User-noted benefits/use cases
+  benefits: text("benefits"), // What this supplement helps with (e.g., "Immune support, Energy, Sleep")
+  
+  // Price monitoring
+  monitorPrice: boolean("monitor_price").notNull().default(false),
+  targetPrice: integer("target_price"), // in cents - notify when price drops below this
+  
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
