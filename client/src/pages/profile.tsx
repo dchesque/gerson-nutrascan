@@ -86,8 +86,8 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground mb-3">
                   Unlimited analyses and save hundreds on supplements
                 </p>
-                <Button size="sm" onClick={() => setLocation("/subscribe")} data-testid="button-upgrade">
-                  Upgrade Now - $14.90/mo or $119/year
+                <Button size="sm" onClick={() => setLocation("/pricing")} data-testid="button-upgrade">
+                  Upgrade Now
                 </Button>
               </div>
             </div>
