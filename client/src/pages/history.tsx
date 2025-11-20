@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import HistoryItem from "@/components/HistoryItem";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 export default function History() {
   const [, setLocation] = useLocation();
@@ -12,6 +13,7 @@ export default function History() {
   const [filter, setFilter] = useState<"all" | "high" | "low">("all");
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadHistory();
