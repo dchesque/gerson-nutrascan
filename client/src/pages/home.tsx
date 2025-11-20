@@ -35,8 +35,8 @@ export default function Home() {
   };
 
   const handleSignup = () => {
-    setIsLogin(false);
-    setShowAuthDialog(true);
+    // Go directly to scan page for free analysis
+    setLocation("/scan");
   };
 
   return (

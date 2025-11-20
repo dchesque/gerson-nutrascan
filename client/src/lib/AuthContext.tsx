@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Auth check failed:", error);
       } finally {
+        // Don't require auth - allow freemium model
         setIsLoading(false);
       }
     };
