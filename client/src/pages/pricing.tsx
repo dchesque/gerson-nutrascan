@@ -37,6 +37,7 @@ export default function Pricing() {
               size="icon"
               onClick={() => setLocation("/")}
               title="Back to Home"
+              data-testid="button-back-home-pricing"
             >
               <Home className="w-5 h-5" />
             </Button>
@@ -240,26 +241,6 @@ export default function Pricing() {
               <h4 className="font-semibold">Premium Support</h4>
               <p className="text-sm text-muted-foreground">Get priority support and access to exclusive features for premium members</p>
             </div>
-          </Card>
-        </section>
-
-        {/* FAQ-like Section */}
-        <section className="max-w-2xl mx-auto space-y-6 py-8">
-          <h3 className="text-2xl font-bold font-heading text-center">Frequently Asked</h3>
-          
-          <Card className="p-6">
-            <h4 className="font-semibold mb-2">Can I cancel anytime?</h4>
-            <p className="text-sm text-muted-foreground">Yes! Cancel your premium subscription at any time. No questions asked.</p>
-          </Card>
-
-          <Card className="p-6">
-            <h4 className="font-semibold mb-2">What payment methods do you accept?</h4>
-            <p className="text-sm text-muted-foreground">We accept all major credit cards and digital payment methods via Stripe.</p>
-          </Card>
-
-          <Card className="p-6">
-            <h4 className="font-semibold mb-2">Is there a free trial?</h4>
-            <p className="text-sm text-muted-foreground">Yes! Start with our free plan and try all features. Upgrade anytime to unlock unlimited analyses.</p>
           </Card>
         </section>
 
