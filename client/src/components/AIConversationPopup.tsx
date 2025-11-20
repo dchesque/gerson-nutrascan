@@ -23,16 +23,35 @@ export default function AIConversationPopup({ open, onClose, onGoalSelect }: AIC
     { icon: "🧠", label: "Memory", value: "memory" },
   ];
 
-  const handleGoalClick = (goal: string) => {
+  const handleGoalClick = async (goal: string) => {
     console.log("Goal selected:", goal);
-    onGoalSelect(goal);
+    
+    try {
+      const { getAIRecommendationAPI } = await import("@/lib/api");
+      const recommendation = await getAIRecommendationAPI(goal);
+      console.log("AI recommendation:", recommendation);
+      // TODO: Display recommendation in UI
+      onGoalSelect(goal);
+    } catch (error) {
+      console.error("Failed to get recommendation:", error);
+    }
+    
     onClose();
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (message.trim()) {
       console.log("Custom message:", message);
-      onGoalSelect(message);
+      
+      try {
+        const { getAIRecommendationAPI } = await import("@/lib/api");
+        const recommendation = await getAIRecommendationAPI(message);
+        console.log("AI recommendation:", recommendation);
+        onGoalSelect(message);
+      } catch (error) {
+        console.error("Failed to get recommendation:", error);
+      }
+      
       setMessage("");
       onClose();
     }

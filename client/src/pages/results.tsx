@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { ArrowLeft, DollarSign, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
+import { ArrowLeft, DollarSign, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ScoreDisplay from "@/components/ScoreDisplay";
 import IngredientCard from "@/components/IngredientCard";
@@ -8,12 +8,8 @@ import AlternativeCard from "@/components/AlternativeCard";
 import PaywallModal from "@/components/PaywallModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function Results() {
-  const [, setLocation] = useLocation();
-  const [showPaywall, setShowPaywall] = useState(false);
-
-  // TODO: Remove mock data - this will come from API
-  const mockResult = {
+// Mock data for fallback
+const mockResult = {
     productName: "Daily Multivitamin Complex",
     brand: "Generic Brand",
     score: 45,
@@ -84,11 +80,40 @@ export default function Results() {
     ],
   };
 
+export default function Results() {
+  const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  const [showPaywall, setShowPaywall] = useState(searchString.includes("showPaywall=true"));
+  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load analysis from session storage
+    const storedAnalysis = sessionStorage.getItem("currentAnalysis");
+    if (storedAnalysis) {
+      setAnalysisData(JSON.parse(storedAnalysis));
+      setLoading(false);
+    } else {
+      // Fallback to mock data if no analysis found
+      setAnalysisData(mockResult);
+      setLoading(false);
+    }
+  }, []);
+
   const handleSubscribe = () => {
     console.log("Subscribe clicked");
-    setShowPaywall(false);
-    setLocation("/");
+    setLocation("/subscribe");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const result = analysisData || mockResult;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -103,15 +128,15 @@ export default function Results() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="font-bold text-lg truncate">{mockResult.productName}</h1>
-            <p className="text-sm text-muted-foreground">{mockResult.brand}</p>
+            <h1 className="font-bold text-lg truncate">{result.productName}</h1>
+            <p className="text-sm text-muted-foreground">{result.brand}</p>
           </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         <div className="flex justify-center">
-          <ScoreDisplay score={mockResult.score} />
+          <ScoreDisplay score={result.score} />
         </div>
 
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center gap-4">
@@ -121,7 +146,7 @@ export default function Results() {
           <div className="flex-1">
             <div className="text-sm text-muted-foreground">Potential Savings</div>
             <div className="text-2xl font-bold font-heading text-primary" data-testid="text-savings">
-              ${mockResult.totalSavings.toFixed(2)}
+              ${result.totalSavings.toFixed(2)}
             </div>
             <div className="text-xs text-muted-foreground">
               By switching to better alternatives
@@ -135,7 +160,7 @@ export default function Results() {
             <h3 className="text-lg font-semibold font-heading">Ingredient Analysis</h3>
           </div>
           <div className="space-y-3">
-            {mockResult.ingredients.map((ingredient, index) => (
+            {result.ingredients.map((ingredient: any, index: number) => (
               <IngredientCard key={index} {...ingredient} />
             ))}
           </div>
@@ -153,7 +178,7 @@ export default function Results() {
 
           <TabsContent value="online" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockResult.onlineAlternatives.map((alt, index) => (
+              {result.onlineAlternatives.map((alt: any, index: number) => (
                 <AlternativeCard key={index} {...alt} />
               ))}
             </div>
@@ -161,7 +186,7 @@ export default function Results() {
 
           <TabsContent value="local" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockResult.localAlternatives.map((alt, index) => (
+              {result.localAlternatives.map((alt: any, index: number) => (
                 <AlternativeCard key={index} {...alt} />
               ))}
             </div>

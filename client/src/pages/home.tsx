@@ -20,9 +20,29 @@ export default function Home() {
     }
   }, []);
 
-  const handleAnalyze = (data: { type: string; content: string }) => {
+  const handleAnalyze = async (data: { type: string; content: string }) => {
     console.log("Analysis triggered:", data);
-    setLocation("/results");
+    
+    try {
+      const { analyzeSupplementAPI } = await import("@/lib/api");
+      const result = await analyzeSupplementAPI(
+        data.type as "photo" | "text" | "voice",
+        data.content
+      );
+      
+      // Store analysis ID in session storage for results page
+      sessionStorage.setItem("currentAnalysisId", result.analysisId);
+      sessionStorage.setItem("currentAnalysis", JSON.stringify(result));
+      
+      setLocation("/results");
+    } catch (error: any) {
+      console.error("Analysis failed:", error);
+      
+      // If error indicates upgrade needed, show paywall
+      if (error.message?.includes("Free analysis limit") || error.message?.includes("Upgrade")) {
+        setLocation("/results?showPaywall=true");
+      }
+    }
   };
 
   return (

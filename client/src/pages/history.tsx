@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Filter, Search } from "lucide-react";
+import { Filter, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import HistoryItem from "@/components/HistoryItem";
@@ -10,8 +10,25 @@ export default function History() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "high" | "low">("all");
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // TODO: Remove mock data - this will come from API
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const loadHistory = async () => {
+    try {
+      const { getHistoryAPI } = await import("@/lib/api");
+      const data = await getHistoryAPI();
+      setHistory(data);
+    } catch (error) {
+      console.error("Failed to load history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const mockHistory = [
     {
       id: "1",
@@ -50,7 +67,20 @@ export default function History() {
     },
   ];
 
-  const filteredHistory = mockHistory.filter((item) => {
+  const formatDate = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+    const hours = diff / (1000 * 60 * 60);
+    
+    if (hours < 1) return "Just now";
+    if (hours < 24) return `${Math.floor(hours)} hours ago`;
+    if (hours < 48) return "Yesterday";
+    if (hours < 168) return `${Math.floor(hours / 24)} days ago`;
+    return `${Math.floor(hours / 168)} weeks ago`;
+  };
+
+  const allHistory = history.length > 0 ? history : mockHistory;
+  const filteredHistory = allHistory.filter((item) => {
     const matchesSearch =
       item.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.brand.toLowerCase().includes(searchQuery.toLowerCase());
@@ -115,7 +145,11 @@ export default function History() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {filteredHistory.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : filteredHistory.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
               <Search className="w-12 h-12 text-muted-foreground" />
@@ -136,6 +170,7 @@ export default function History() {
               <HistoryItem
                 key={item.id}
                 {...item}
+                date={typeof item.createdAt === 'string' ? item.createdAt : formatDate(item.createdAt)}
                 onClick={() => {
                   console.log("View history item:", item.id);
                   setLocation("/results");

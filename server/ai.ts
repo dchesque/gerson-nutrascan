@@ -4,12 +4,21 @@
 import OpenAI from "openai";
 import type { IngredientAnalysis, AlternativeProduct } from "@shared/schema";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("Missing required OpenAI secret: OPENAI_API_KEY");
-}
+// Lazy initialization - only create client when needed
+let openaiClient: OpenAI | null = null;
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAI(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.");
+  }
+  
+  if (!openaiClient) {
+    // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  
+  return openaiClient;
+}
 
 interface SupplementAnalysisResult {
   productName: string;
@@ -79,6 +88,7 @@ Rules:
 7. Calculate realistic savings based on price differences
 8. Use real brand names for alternatives (Nature Made, Garden of Life, Now Foods, Nordic Naturals, Doctor's Best, etc.)`;
 
+  const openai = getOpenAI();
   const response = await openai.chat.completions.create({
     model: "gpt-5",
     messages: [
@@ -116,6 +126,7 @@ Provide a brief, friendly response (2-3 sentences) with:
 
 Be conversational, helpful, and evidence-based. No medical claims.`;
 
+  const openai = getOpenAI();
   const response = await openai.chat.completions.create({
     model: "gpt-5",
     messages: [

@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Results from "@/pages/results";
 import History from "@/pages/history";
 import Profile from "@/pages/profile";
+import Subscribe from "@/pages/subscribe";
 import BottomNav from "@/components/BottomNav";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
         <Route path="/results" component={Results} />
         <Route path="/history" component={History} />
         <Route path="/profile" component={Profile} />
+        <Route path="/subscribe" component={Subscribe} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />
