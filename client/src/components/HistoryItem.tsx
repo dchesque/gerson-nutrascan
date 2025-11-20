@@ -23,23 +23,13 @@ export default function HistoryItem({ id, productName, brand, score, date, benef
 
   return (
     <Card
-      className="p-3 hover-elevate cursor-pointer"
+      className="p-4 hover-elevate cursor-pointer"
       onClick={onClick}
       data-testid={`history-item-${id}`}
     >
-      <div className="flex items-center gap-3">
-        {/* Product Image or Score */}
+      <div className="flex items-center gap-4">
         <div className="flex-shrink-0">
-          {productImage ? (
-            <img
-              src={productImage}
-              alt={productName}
-              className="w-16 h-16 object-cover rounded-md"
-              data-testid={`product-image-${id}`}
-            />
-          ) : (
-            <ScoreDisplay score={score} size="sm" />
-          )}
+          <ScoreDisplay score={score} size="sm" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -55,13 +45,6 @@ export default function HistoryItem({ id, productName, brand, score, date, benef
             <span>{date}</span>
           </div>
         </div>
-
-        {/* Score Badge if image is shown */}
-        {productImage && (
-          <div className="flex-shrink-0">
-            <ScoreDisplay score={score} size="sm" />
-          </div>
-        )}
 
         <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
       </div>
