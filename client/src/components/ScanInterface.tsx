@@ -23,6 +23,43 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const compressImage = (base64: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Failed to get canvas context'));
+
+        const maxWidth = 1024;
+        const maxHeight = 1024;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressed = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressed);
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = base64;
+    });
+  };
+
   const handlePhotoCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -30,14 +67,24 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
     setIsProcessingPhoto(true);
     try {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const base64 = event.target?.result as string;
-        setPhotoPreview(base64);
-        console.log("Photo captured and converted to base64");
-        toast({
-          title: "Photo Captured",
-          description: "Click 'Analyze Photo' to process the supplement label",
-        });
+        try {
+          const compressed = await compressImage(base64);
+          setPhotoPreview(compressed);
+          console.log("Photo captured, compressed and converted to base64");
+          toast({
+            title: "Photo Captured",
+            description: "Click 'Analyze Photo' to process the supplement label",
+          });
+        } catch (compressError) {
+          console.error("Error compressing photo:", compressError);
+          setPhotoPreview(base64);
+          toast({
+            title: "Photo Captured",
+            description: "Using original photo quality",
+          });
+        }
       };
       reader.readAsDataURL(file);
     } catch (error) {
