@@ -22,11 +22,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("/api/auth/status");
+        const response = await fetch("/api/auth/status", {
+          headers: { "Content-Type": "application/json" },
+        });
+        
         if (response.ok) {
           const data = await response.json();
-          setIsAuthenticated(data.authenticated);
-          setUserId(data.userId);
+          if (data.authenticated) {
+            setIsAuthenticated(true);
+            setUserId(data.userId);
+          }
         }
       } catch (error) {
         console.error("Auth check failed:", error);
