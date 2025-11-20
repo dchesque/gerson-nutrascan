@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight, Star, Lightbulb, Lock, Rocket, Brain, Smartphone } from "lucide-react";
 import cameraScreen from "@assets/generated_images/camera_scan_interface.png";
 import resultsScreen from "@assets/generated_images/supplement_analysis_results_screen.png";
+import historyScreen from "@assets/generated_images/scan_history_page.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -257,7 +258,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Real App Interface Preview */}
+        {/* App Interface Preview */}
         <section className="max-w-7xl mx-auto px-4 py-24">
           <div className="text-center mb-16">
             <div className="flex justify-center mb-4">
@@ -266,50 +267,51 @@ export default function Home() {
               </div>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold font-heading mb-4">See What's Inside</h2>
-            <p className="text-lg text-muted-foreground">Real app screenshots showing how simple analyzing supplements can be</p>
+            <p className="text-lg text-muted-foreground">Our intuitive interface makes analyzing supplements incredibly simple</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold font-heading mb-2 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">1</span>
-                  Scan Any Supplement
-                </h3>
-                <p className="text-muted-foreground">Point your camera at any supplement bottle. Our AI instantly reads the label and begins analysis.</p>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold font-heading mb-2 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">2</span>
-                  Get Instant Results
-                </h3>
-                <p className="text-muted-foreground">See your supplement's quality score (0-100), ingredient analysis, and cost-effective alternatives in seconds.</p>
-              </div>
-              <Button 
-                size="lg" 
-                onClick={() => setLocation("/scan")}
-                className="bg-gradient-to-r from-primary to-primary/90 text-lg font-semibold"
-              >
-                Try It Free Now <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="overflow-hidden hover-elevate border-primary/20">
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+                <p className="text-sm font-semibold text-primary mb-3">1. Scan a Supplement</p>
                 <img 
                   src={cameraScreen} 
                   alt="Scan any supplement with camera" 
-                  className="w-full"
+                  className="w-full rounded-lg border border-primary/20"
                 />
-              </Card>
-              <Card className="overflow-hidden hover-elevate border-primary/20 shadow-lg">
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground">Take a photo of any supplement bottle and let our AI analyze it instantly</p>
+              </div>
+            </Card>
+
+            <Card className="overflow-hidden hover-elevate border-primary/20">
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+                <p className="text-sm font-semibold text-primary mb-3">2. Get Instant Results</p>
                 <img 
                   src={resultsScreen} 
                   alt="Get instant supplement analysis results" 
-                  className="w-full"
+                  className="w-full rounded-lg border border-primary/20"
                 />
-              </Card>
-            </div>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground">See quality scores, ingredient breakdown, and better alternatives in seconds</p>
+              </div>
+            </Card>
+
+            <Card className="overflow-hidden hover-elevate border-primary/20">
+              <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-4">
+                <p className="text-sm font-semibold text-primary mb-3">3. Track Your History</p>
+                <img 
+                  src={historyScreen} 
+                  alt="Keep track of all your supplement analysis history" 
+                  className="w-full rounded-lg border border-primary/20"
+                />
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground">Keep a complete record of all your analyses and track improvements over time</p>
+              </div>
+            </Card>
           </div>
         </section>
 
