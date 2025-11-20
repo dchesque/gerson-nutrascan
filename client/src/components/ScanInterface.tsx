@@ -129,9 +129,8 @@ export default function ScanInterface({ onAnalyze, isLoading = false }: ScanInte
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">This helps us give better recommendations and track what's working for you</p>
-          </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <Button
                 type="button"
                 variant="outline"
