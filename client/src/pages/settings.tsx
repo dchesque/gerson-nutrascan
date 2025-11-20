@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2 } from "lucide-react";
+import { Bell, Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2, User, Mail, Phone, Eye, EyeOff } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
+  const [isEditingAccount, setIsEditingAccount] = useState(false);
+  const [isSavingAccount, setIsSavingAccount] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const { toast } = useToast();
+
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
@@ -17,8 +24,18 @@ export default function Settings() {
     dataCollection: true,
   });
 
+  const [accountData, setAccountData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   useEffect(() => {
     loadSettings();
+    loadAccountInfo();
   }, []);
 
   const loadSettings = async () => {
@@ -34,9 +51,65 @@ export default function Settings() {
     }
   };
 
+  const loadAccountInfo = async () => {
+    try {
+      const { getUserStatusAPI } = await import("@/lib/api");
+      const status = await getUserStatusAPI();
+      if (status?.account) {
+        setAccountData({
+          name: status.account.name || "",
+          email: status.account.email || "",
+          phone: status.account.phone || "",
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load account info:", error);
+    }
+  };
+
   const saveSettings = (newSettings: typeof settings) => {
     setSettings(newSettings);
     localStorage.setItem("nutrascan-settings", JSON.stringify(newSettings));
+  };
+
+  const handleSaveAccount = async () => {
+    if (accountData.newPassword && accountData.newPassword !== accountData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingAccount(true);
+    try {
+      await fetch("/api/user/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: accountData.name,
+          email: accountData.email,
+          phone: accountData.phone,
+        }),
+      });
+      setIsEditingAccount(false);
+      toast({
+        title: "Account Updated",
+        description: "Your account information has been saved successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save account information",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingAccount(false);
+    }
   };
 
   const toggleNotifications = () => {
@@ -95,10 +168,148 @@ export default function Settings() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Notifications Section */}
+        {/* Account Info Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold font-heading">Account Information</h2>
+            <Button
+              size="sm"
+              variant={isEditingAccount ? "default" : "outline"}
+              onClick={() => (isEditingAccount ? handleSaveAccount() : setIsEditingAccount(true))}
+              disabled={isSavingAccount}
+              data-testid="button-edit-account"
+            >
+              {isSavingAccount ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  Saving...
+                </>
+              ) : isEditingAccount ? (
+                "Save Account"
+              ) : (
+                "Edit Account"
+              )}
+            </Button>
+          </div>
+
+          <Card className="p-6 space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Full Name</label>
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Your name"
+                  value={accountData.name}
+                  onChange={(e) => setAccountData({ ...accountData, name: e.target.value })}
+                  disabled={!isEditingAccount}
+                  data-testid="input-name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Email Address</label>
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={accountData.email}
+                  onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
+                  disabled={!isEditingAccount}
+                  data-testid="input-email"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Phone Number</label>
+              <div className="flex items-center gap-2">
+                <Phone className="w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="+1 (555) 000-0000"
+                  value={accountData.phone}
+                  onChange={(e) => setAccountData({ ...accountData, phone: e.target.value })}
+                  disabled={!isEditingAccount}
+                  data-testid="input-phone"
+                />
+              </div>
+            </div>
+
+            {isEditingAccount && (
+              <>
+                <div className="border-t border-border pt-4 mt-4">
+                  <p className="text-sm font-medium mb-4 text-muted-foreground">Change Password (Optional)</p>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Current Password</label>
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1 relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Enter current password"
+                            value={accountData.currentPassword}
+                            onChange={(e) => setAccountData({ ...accountData, currentPassword: e.target.value })}
+                            data-testid="input-current-password"
+                          />
+                          <button
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">New Password</label>
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                        <Input
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="Enter new password"
+                          value={accountData.newPassword}
+                          onChange={(e) => setAccountData({ ...accountData, newPassword: e.target.value })}
+                          data-testid="input-new-password"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Confirm New Password</label>
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                        <div className="flex-1 relative">
+                          <Input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="Confirm new password"
+                            value={accountData.confirmPassword}
+                            onChange={(e) => setAccountData({ ...accountData, confirmPassword: e.target.value })}
+                            data-testid="input-confirm-password"
+                          />
+                          <button
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </Card>
+        </section>
+
+        {/* Notifications & Alerts Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading">Notifications & Alerts</h2>
-          
+
           <Card className="divide-y divide-border">
             <div className="px-4 py-4 flex items-center justify-between hover-elevate cursor-pointer">
               <div className="flex items-center gap-3">
@@ -139,7 +350,7 @@ export default function Settings() {
         {/* Display Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading">Display</h2>
-          
+
           <Card className="divide-y divide-border">
             <div className="px-4 py-4 flex items-center justify-between hover-elevate cursor-pointer">
               <div className="flex items-center gap-3">
@@ -182,7 +393,7 @@ export default function Settings() {
         {/* Privacy Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading">Privacy & Data</h2>
-          
+
           <Card className="divide-y divide-border">
             <div className="px-4 py-4 flex items-center justify-between hover-elevate cursor-pointer">
               <div className="flex items-center gap-3">
@@ -232,7 +443,7 @@ export default function Settings() {
         {/* About Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading">About</h2>
-          
+
           <Card className="divide-y divide-border">
             <button
               className="w-full px-4 py-4 flex items-center justify-between hover-elevate text-left"
@@ -267,14 +478,13 @@ export default function Settings() {
         {/* Danger Zone */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading text-destructive">Danger Zone</h2>
-          
+
           <Card className="border-destructive/20 bg-destructive/5">
             <button
               className="w-full px-4 py-4 flex items-center justify-between hover-elevate text-left"
               onClick={() => {
                 if (confirm("Are you sure you want to sign out?")) {
                   console.log("Sign out clicked");
-                  // Add sign out logic here
                 }
               }}
               data-testid="button-signout-settings"

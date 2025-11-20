@@ -137,6 +137,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freeAnalysesUsed: user.freeAnalysesUsed,
         totalAnalyses: analyses.length,
         totalSavings: totalSavings / 100, // convert to dollars
+        account: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+        },
         profile: {
           age: user.age,
           weight: user.weight,
@@ -154,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user profile
+  // Update user profile (health info)
   app.patch("/api/user/profile", async (req, res) => {
     try {
       const userId = req.session.userId!;
@@ -188,6 +193,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       res.status(500).json({ message: "Error updating profile: " + error.message });
+    }
+  });
+
+  // Update user account info (name, email, phone)
+  app.patch("/api/user/account", async (req, res) => {
+    try {
+      const userId = req.session.userId!;
+      const { name, email, phone } = req.body;
+
+      const updated = await storage.updateUserAccountInfo(userId, {
+        name,
+        email,
+        phone,
+      });
+
+      res.json({
+        success: true,
+        account: {
+          name: updated.name,
+          email: updated.email,
+          phone: updated.phone,
+        },
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Error updating account: " + error.message });
     }
   });
 

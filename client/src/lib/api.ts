@@ -39,6 +39,11 @@ export interface UserStatus {
   freeAnalysesUsed: number;
   totalAnalyses: number;
   totalSavings: number;
+  account?: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+  };
   profile?: {
     age: number | null;
     weight: number | null;

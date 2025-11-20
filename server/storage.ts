@@ -20,6 +20,11 @@ export interface IStorage {
     activityLevel?: string;
     dietType?: string;
   }): Promise<User>;
+  updateUserAccountInfo(userId: string, info: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  }): Promise<User>;
   
   // Analysis management
   createAnalysis(analysis: InsertAnalysis): Promise<Analysis>;
@@ -131,6 +136,24 @@ export class MemStorage implements IStorage {
       medications: profile.medications ?? user.medications,
       activityLevel: profile.activityLevel ?? user.activityLevel,
       dietType: profile.dietType ?? user.dietType,
+    };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async updateUserAccountInfo(userId: string, info: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  }): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    
+    const updated = {
+      ...user,
+      name: info.name ?? user.name,
+      email: info.email ?? user.email,
+      phone: info.phone ?? user.phone,
     };
     this.users.set(userId, updated);
     return updated;
