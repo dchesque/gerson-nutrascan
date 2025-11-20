@@ -11,6 +11,7 @@ import History from "@/pages/history";
 import Profile from "@/pages/profile";
 import Subscribe from "@/pages/subscribe";
 import Pricing from "@/pages/pricing";
+import Settings from "@/pages/settings";
 import BottomNav from "@/components/BottomNav";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
         <Route path="/profile" component={Profile} />
         <Route path="/subscribe" component={Subscribe} />
         <Route path="/pricing" component={Pricing} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />

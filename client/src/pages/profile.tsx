@@ -317,7 +317,7 @@ export default function Profile() {
         <Card className="divide-y divide-border">
           <button
             className="w-full px-4 py-4 flex items-center gap-3 text-left hover-elevate"
-            onClick={() => console.log("Settings clicked")}
+            onClick={() => setLocation("/settings")}
             data-testid="button-settings"
           >
             <Settings className="w-5 h-5 text-muted-foreground" />
