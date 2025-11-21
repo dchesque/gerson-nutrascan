@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const response = await fetch("/api/auth/status", {
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
         
         if (response.ok) {
@@ -36,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Auth check failed:", error);
       } finally {
-        // Don't require auth - allow freemium model
         setIsLoading(false);
       }
     };
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const response = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
 
@@ -81,7 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { 
+      method: "POST",
+      credentials: "include",
+    });
     setUserId(null);
     setIsAuthenticated(false);
     queryClient.clear();
