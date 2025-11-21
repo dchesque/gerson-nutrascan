@@ -83,18 +83,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Track free analyses per session
       if (!userId) {
-        if (!req.session.freeAnalysesCount) {
-          req.session.freeAnalysesCount = 0;
+        const session = req.session as any;
+        if (!session.freeAnalysesCount) {
+          session.freeAnalysesCount = 0;
         }
         
-        if (req.session.freeAnalysesCount >= 1) {
+        if (session.freeAnalysesCount >= 1) {
           return res.status(403).json({ 
             message: "Free analysis limit reached. Please sign up or login to continue.",
             needsAuth: true 
           });
         }
         
-        req.session.freeAnalysesCount += 1;
+        session.freeAnalysesCount += 1;
       }
 
       const user = userId ? await storage.getUser(userId) : null;
@@ -123,6 +124,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Analysis error:", error);
       res.status(500).json({ message: "Analysis failed: " + error.message });
     }
+  });
+
+  // Auth guard - protect routes that require authentication
+  app.use("/api", (req, res, next) => {
+    const publicPaths = ["/auth", "/analyze", "/analysis"];
+    const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
+    
+    if (isPublicPath) {
+      return next();
+    }
+    
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Unauthorized - Please login or signup" });
+    }
+    next();
   });
 
   // Get analysis by ID
