@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/lib/AuthContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import AIConversationPopup from "@/components/AIConversationPopup";
 import { Button } from "@/components/ui/button";
@@ -7,17 +8,21 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Sparkles, TrendingUp, DollarSign, Zap, Shield, CheckCircle2, ArrowRight, Star, Lightbulb, Lock, Rocket, Brain, Smartphone } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import cameraScreen from "@assets/generated_images/camera_scan_interface.png";
 import resultsScreen from "@assets/generated_images/supplement_analysis_results_screen.png";
 import historyScreen from "@assets/generated_images/scan_history_page.png";
 
 export default function Home() {
   const [, setLocation] = useLocation();
+  const { signup } = useAuth();
+  const { toast } = useToast();
   const [showAIPopup, setShowAIPopup] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
@@ -30,16 +35,27 @@ export default function Home() {
     }
   }, []);
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? "Logging in" : "Signing up", { email, password });
-    setShowAuthDialog(false);
-    setLocation("/scan");
+    setIsLoading(true);
+
+    try {
+      await signup(email, password);
+      setShowAuthDialog(false);
+      setLocation("/scan");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = () => {
-    // Go directly to scan page for free analysis
-    setLocation("/scan");
+    setShowAuthDialog(true);
   };
 
   return (
