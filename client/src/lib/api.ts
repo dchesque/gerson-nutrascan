@@ -73,6 +73,10 @@ export async function analyzeSupplementAPI(
   const response = await apiRequest("POST", "/api/analyze", { type, content });
   if (!response.ok) {
     const error = await response.json();
+    // Capture needsAuth flag for free trial limit
+    if (error.needsAuth) {
+      throw new Error("Free analysis limit reached. Please sign up or login.");
+    }
     throw new Error(error.message || "Analysis failed");
   }
   return response.json();
