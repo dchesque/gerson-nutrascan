@@ -31,10 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       req.session.userId = user.id;
-      req.session.save((err) => {
-        if (err) return res.status(500).json({ message: "Session error" });
-        res.json({ success: true, userId: user.id });
-      });
+      res.json({ success: true, userId: user.id });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Signup failed" });
     }
@@ -54,10 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       req.session.userId = user.id;
-      req.session.save((err) => {
-        if (err) return res.status(500).json({ message: "Session error" });
-        res.json({ success: true, userId: user.id });
-      });
+      res.json({ success: true, userId: user.id });
     } catch (error: any) {
       res.status(400).json({ message: error.message || "Login failed" });
     }
