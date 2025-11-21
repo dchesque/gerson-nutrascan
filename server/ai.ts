@@ -161,7 +161,7 @@ Rules:
 
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -174,19 +174,24 @@ Rules:
         },
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 4096,
+      max_completion_tokens: 2000,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
     // Ensure score is within bounds
-    result.score = Math.max(0, Math.min(100, result.score));
+    result.score = Math.max(0, Math.min(100, result.score || 0));
+    
+    // Validate structure
+    if (!result.ingredients) result.ingredients = [];
+    if (!result.onlineAlternatives) result.onlineAlternatives = [];
+    if (!result.localAlternatives) result.localAlternatives = [];
     
     return result as SupplementAnalysisResult;
   } catch (error: any) {
-    // If OpenAI fails (quota, API error, etc), use mock data for testing
-    console.warn("OpenAI API failed, using mock data for development:", error.message);
-    return getMockAnalysisResult(inputContent);
+    // Log error details for debugging
+    console.error("OpenAI API error:", error.message);
+    throw new Error(`Supplement analysis failed: ${error.message}`);
   }
 }
 
@@ -202,22 +207,27 @@ Provide a brief, friendly response (2-3 sentences) with:
 
 Be conversational, helpful, and evidence-based. No medical claims.`;
 
-  const openai = getOpenAI();
-  const response = await openai.chat.completions.create({
-    model: "gpt-5",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a helpful supplement advisor. Provide evidence-based recommendations without making medical claims. Be friendly and concise.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    max_completion_tokens: 256,
-  });
+  try {
+    const openai = getOpenAI();
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful supplement advisor. Provide evidence-based recommendations without making medical claims. Be friendly and concise.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      max_completion_tokens: 256,
+    });
 
-  return response.choices[0].message.content || "Thanks for sharing! I'd recommend scanning any supplements you're considering to ensure they have effective dosages.";
+    return response.choices[0].message.content || "Thanks for sharing! I'd recommend scanning any supplements you're considering to ensure they have effective dosages.";
+  } catch (error: any) {
+    console.error("Recommendation error:", error);
+    return "I'd love to help! Try scanning a supplement to get personalized recommendations.";
+  }
 }
