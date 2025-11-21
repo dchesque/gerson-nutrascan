@@ -189,7 +189,12 @@ Rules:
     
     return result as SupplementAnalysisResult;
   } catch (error: any) {
-    // Log error details for debugging
+    // If quota exceeded (429), use mock data instead of failing
+    if (error.status === 429 || error.message?.includes("quota")) {
+      console.warn("OpenAI quota exceeded, using mock data:", error.message);
+      return getMockAnalysisResult(inputContent);
+    }
+    // For other errors, still throw
     console.error("OpenAI API error:", error.message);
     throw new Error(`Supplement analysis failed: ${error.message}`);
   }
@@ -227,6 +232,11 @@ Be conversational, helpful, and evidence-based. No medical claims.`;
 
     return response.choices[0].message.content || "Thanks for sharing! I'd recommend scanning any supplements you're considering to ensure they have effective dosages.";
   } catch (error: any) {
+    // If quota exceeded, return helpful fallback message
+    if (error.status === 429 || error.message?.includes("quota")) {
+      console.warn("OpenAI quota exceeded for recommendations");
+      return "Great question! Try analyzing a few supplements with NutraScan to see which ones align best with your goals.";
+    }
     console.error("Recommendation error:", error);
     return "I'd love to help! Try scanning a supplement to get personalized recommendations.";
   }
