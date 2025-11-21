@@ -32,7 +32,6 @@ export interface IStorage {
   createAnalysis(analysis: InsertAnalysis): Promise<Analysis>;
   getAnalysis(id: string): Promise<Analysis | undefined>;
   getUserAnalyses(userId: string): Promise<Analysis[]>;
-  getAllAnalyses(): Promise<Analysis[]>;
   deleteAnalysis(id: string): Promise<void>;
 }
 
@@ -210,11 +209,6 @@ export class MemStorage implements IStorage {
   async getUserAnalyses(userId: string): Promise<Analysis[]> {
     return Array.from(this.analyses.values())
       .filter((analysis) => analysis.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }
-
-  async getAllAnalyses(): Promise<Analysis[]> {
-    return Array.from(this.analyses.values())
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
