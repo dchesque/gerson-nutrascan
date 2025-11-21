@@ -71,18 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ authenticated: true, userId: req.session.userId });
   });
 
-  // Auth guard
-  app.use("/api", (req, res, next) => {
-    if (req.path.startsWith("/auth")) {
-      return next();
-    }
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized - Please login or signup" });
-    }
-    next();
-  });
-
-  // Analyze supplement
+  // Analyze supplement - Allow 1 free analysis without auth
   app.post("/api/analyze", async (req, res) => {
     try {
       const { type, content } = req.body;
@@ -91,18 +80,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = req.session.userId;
+      
+      // Track free analyses per session
       if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
+        if (!req.session.freeAnalysesCount) {
+          req.session.freeAnalysesCount = 0;
+        }
+        
+        if (req.session.freeAnalysesCount >= 1) {
+          return res.status(403).json({ 
+            message: "Free analysis limit reached. Please sign up or login to continue.",
+            needsAuth: true 
+          });
+        }
+        
+        req.session.freeAnalysesCount += 1;
       }
 
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(401).json({ message: "User not found" });
-      }
+      const user = userId ? await storage.getUser(userId) : null;
 
       const analysisResult = await analyzeSupplementWithAI(content);
       const analysis = await storage.createAnalysis({
-        userId,
+        userId: userId || undefined,
         productName: analysisResult.productName,
         brand: analysisResult.brand,
         score: analysisResult.score,
@@ -118,6 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         analysisId: analysis.id,
         ...analysisResult,
         totalSavings: analysisResult.totalSavings,
+        isFreeTrial: !userId,
       });
     } catch (error: any) {
       console.error("Analysis error:", error);
