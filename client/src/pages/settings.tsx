@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { updateUserAccountAPI } from "@/lib/api";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
@@ -17,6 +19,7 @@ export default function Settings() {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const { toast } = useToast();
+  const { logout } = useAuth();
 
   const [settings, setSettings] = useState({
     notifications: true,
@@ -112,15 +115,10 @@ export default function Settings() {
 
     setIsSavingAccount(true);
     try {
-      await fetch("/api/user/account", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: accountData.name,
-          email: accountData.email,
-          phone: accountData.phone,
-          profileImage: accountData.profileImage || null,
-        }),
+      await updateUserAccountAPI({
+        name: accountData.name,
+        phone: accountData.phone,
+        profileImage: accountData.profileImage || null,
       });
       setIsEditingAccount(false);
       setIsEditingPhoto(false);
@@ -136,6 +134,19 @@ export default function Settings() {
       });
     } finally {
       setIsSavingAccount(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setLocation("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
     }
   };
 
@@ -589,7 +600,7 @@ export default function Settings() {
               className="w-full px-4 py-4 flex items-center justify-between hover-elevate text-left"
               onClick={() => {
                 if (confirm("Are you sure you want to sign out?")) {
-                  console.log("Sign out clicked");
+                  handleLogout();
                 }
               }}
               data-testid="button-signout-settings"

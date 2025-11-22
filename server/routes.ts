@@ -1,121 +1,107 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { supabaseAdmin } from "./supabase";
 import { analyzeSupplementWithAI, getPersonalizedRecommendations } from "./ai";
+import { optionalAuth, validateSupabaseToken } from "./middleware/auth";
 import Stripe from "stripe";
-import { createHash } from "crypto";
-import { signupSchema, loginSchema } from "@shared/schema";
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2025-11-17.clover" })
   : null;
 
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
-}
+// Track free analyses by IP for anonymous users
+const anonymousAnalyses = new Map<string, number>();
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // Auth routes
-  app.post("/api/auth/signup", async (req, res) => {
-    try {
-      const validated = signupSchema.parse(req.body);
-      const existingUser = await storage.getUserByEmail(validated.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-      
-      const user = await storage.createUser({
-        email: validated.email,
-        passwordHash: hashPassword(validated.password),
-      });
-      
-      req.session.userId = user.id;
-      res.json({ success: true, userId: user.id });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Signup failed" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const validated = loginSchema.parse(req.body);
-      const user = await storage.getUserByEmail(validated.email);
-      if (!user || !user.passwordHash) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      const isValid = await storage.verifyPassword(user.id, validated.password);
-      if (!isValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-      
-      req.session.userId = user.id;
-      res.json({ success: true, userId: user.id });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || "Login failed" });
-    }
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) return res.status(500).json({ message: "Logout failed" });
-      res.json({ success: true });
-    });
-  });
-
-  app.get("/api/auth/status", (req, res) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ authenticated: false });
-    }
-    res.json({ authenticated: true, userId: req.session.userId });
-  });
 
   // Analyze supplement - Allow 1 free analysis without auth
-  app.post("/api/analyze", async (req, res) => {
+  app.post("/api/analyze", optionalAuth, async (req, res) => {
     try {
       const { type, content } = req.body;
       if (!content || !type) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      const userId = req.session.userId;
-      
-      // Track free analyses per session
+      const userId = req.userId;
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+      // Check free analysis limit for anonymous users
       if (!userId) {
-        const session = req.session as any;
-        if (!session.freeAnalysesCount) {
-          session.freeAnalysesCount = 0;
-        }
-        
-        if (session.freeAnalysesCount >= 1) {
-          return res.status(403).json({ 
+        const currentCount = anonymousAnalyses.get(clientIp) || 0;
+
+        if (currentCount >= 1) {
+          return res.status(403).json({
             message: "Free analysis limit reached. Please sign up or login to continue.",
-            needsAuth: true 
+            needsAuth: true
           });
         }
-        
-        session.freeAnalysesCount += 1;
+
+        anonymousAnalyses.set(clientIp, currentCount + 1);
+      } else {
+        // Check user's free analyses limit if not premium
+        const { data: userProfile } = await supabaseAdmin
+          .from('user_profiles')
+          .select('is_premium, free_analyses_used')
+          .eq('id', userId)
+          .single();
+
+        if (userProfile && !userProfile.is_premium && userProfile.free_analyses_used >= 1) {
+          return res.status(403).json({
+            message: "Free analysis limit reached. Please upgrade to premium.",
+            needsAuth: false,
+            needsPremium: true
+          });
+        }
       }
 
-      const user = userId ? await storage.getUser(userId) : null;
-
       const analysisResult = await analyzeSupplementWithAI(content);
-      const analysis = await storage.createAnalysis({
-        userId: userId || undefined,
-        productName: analysisResult.productName,
-        brand: analysisResult.brand,
-        score: analysisResult.score,
-        inputType: type,
-        inputContent: content,
-        ingredients: analysisResult.ingredients as any,
-        totalSavings: Math.round(analysisResult.totalSavings * 100),
-        onlineAlternatives: analysisResult.onlineAlternatives as any,
-        localAlternatives: analysisResult.localAlternatives as any,
-      });
+
+      // Save analysis to Supabase
+      const { data: analysis, error } = await supabaseAdmin
+        .from('analyses')
+        .insert({
+          user_id: userId || null,
+          product_name: analysisResult.productName,
+          brand: analysisResult.brand,
+          score: analysisResult.score,
+          input_type: type,
+          input_content: content,
+          ingredients: analysisResult.ingredients,
+          total_savings: Math.round(analysisResult.totalSavings * 100),
+          online_alternatives: analysisResult.onlineAlternatives,
+          local_alternatives: analysisResult.localAlternatives,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Failed to save analysis:", error);
+      }
+
+      // Increment free analyses count for logged-in users
+      if (userId) {
+        await supabaseAdmin
+          .from('user_profiles')
+          .update({ free_analyses_used: supabaseAdmin.rpc('increment_free_analyses') })
+          .eq('id', userId);
+
+        // Alternative: increment manually if RPC doesn't exist
+        const { data: profile } = await supabaseAdmin
+          .from('user_profiles')
+          .select('free_analyses_used')
+          .eq('id', userId)
+          .single();
+
+        if (profile) {
+          await supabaseAdmin
+            .from('user_profiles')
+            .update({ free_analyses_used: (profile.free_analyses_used || 0) + 1 })
+            .eq('id', userId);
+        }
+      }
 
       res.json({
-        analysisId: analysis.id,
+        analysisId: analysis?.id || 'temp-' + Date.now(),
         ...analysisResult,
         totalSavings: analysisResult.totalSavings,
         isFreeTrial: !userId,
@@ -126,98 +112,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth guard - protect routes that require authentication
-  app.use("/api", (req, res, next) => {
-    const publicPaths = ["/auth", "/analyze", "/analysis"];
-    const isPublicPath = publicPaths.some(path => req.path.startsWith(path));
-    
-    if (isPublicPath) {
-      return next();
-    }
-    
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized - Please login or signup" });
-    }
-    next();
-  });
-
-  // Get analysis by ID
+  // Get analysis by ID (public - RLS handles access)
   app.get("/api/analysis/:id", async (req, res) => {
     try {
-      const analysis = await storage.getAnalysis(req.params.id);
-      if (!analysis) {
+      const { data: analysis, error } = await supabaseAdmin
+        .from('analyses')
+        .select('*')
+        .eq('id', req.params.id)
+        .single();
+
+      if (error || !analysis) {
         return res.status(404).json({ message: "Analysis not found" });
       }
+
       res.json({
-        ...analysis,
-        totalSavings: analysis.totalSavings / 100,
+        id: analysis.id,
+        productName: analysis.product_name,
+        brand: analysis.brand,
+        score: analysis.score,
+        inputType: analysis.input_type,
+        inputContent: analysis.input_content,
+        ingredients: analysis.ingredients,
+        totalSavings: analysis.total_savings / 100,
+        onlineAlternatives: analysis.online_alternatives,
+        localAlternatives: analysis.local_alternatives,
+        createdAt: analysis.created_at,
       });
     } catch (error: any) {
       res.status(500).json({ message: "Error fetching analysis: " + error.message });
     }
   });
 
-  // Get history
-  app.get("/api/history", async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const analyses = await storage.getUserAnalyses(userId);
-      res.json(
-        analyses.map((a) => ({
-          id: a.id,
-          productName: a.productName,
-          brand: a.brand,
-          score: a.score,
-          createdAt: a.createdAt,
-        }))
-      );
-    } catch (error: any) {
-      res.status(500).json({ message: "Error fetching history: " + error.message });
-    }
-  });
-
-  // Get user status
-  app.get("/api/user/status", async (req, res) => {
-    try {
-      const userId = req.session.userId!;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const analyses = await storage.getUserAnalyses(userId);
-      const totalSavings = analyses.reduce((sum, a) => sum + a.totalSavings, 0);
-
-      res.json({
-        isPremium: user.isPremium,
-        freeAnalysesUsed: user.freeAnalysesUsed,
-        totalAnalyses: analyses.length,
-        totalSavings: totalSavings / 100,
-        account: {
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          profileImage: user.profileImage,
-        },
-        profile: {
-          age: user.age,
-          weight: user.weight,
-          height: user.height,
-          gender: user.gender,
-          healthGoals: user.healthGoals,
-          allergies: user.allergies,
-          medications: user.medications,
-          activityLevel: user.activityLevel,
-          dietType: user.dietType,
-        },
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: "Error fetching user status: " + error.message });
-    }
-  });
-
-  // AI recommendation
-  app.post("/api/ai/recommend", async (req, res) => {
+  // AI recommendation - requires auth
+  app.post("/api/ai/recommend", validateSupabaseToken, async (req, res) => {
     try {
       const { goal } = req.body;
       if (!goal) {

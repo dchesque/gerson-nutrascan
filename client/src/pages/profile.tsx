@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { updateUserProfileAPI } from "@/lib/api";
 
 export default function Profile() {
   const [, setLocation] = useLocation();
@@ -17,6 +19,7 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [showHealthProfile, setShowHealthProfile] = useState(true);
   const { toast } = useToast();
+  const { logout, isAuthenticated, user: authUser } = useAuth();
 
   const [profileData, setProfileData] = useState({
     age: "",
@@ -62,10 +65,16 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
+      await updateUserProfileAPI({
+        age: profileData.age ? parseInt(profileData.age) : undefined,
+        weight: profileData.weight ? parseInt(profileData.weight) : undefined,
+        height: profileData.height ? parseInt(profileData.height) : undefined,
+        gender: profileData.gender || undefined,
+        healthGoals: profileData.healthGoals || undefined,
+        allergies: profileData.allergies || undefined,
+        medications: profileData.medications || undefined,
+        activityLevel: profileData.activityLevel || undefined,
+        dietType: profileData.dietType || undefined,
       });
       setIsEditing(false);
       toast({
@@ -80,6 +89,19 @@ export default function Profile() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setLocation("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
     }
   };
 
@@ -357,7 +379,7 @@ export default function Profile() {
 
           <button
             className="w-full px-4 py-4 flex items-center gap-3 text-left hover-elevate text-destructive"
-            onClick={() => console.log("Sign out clicked")}
+            onClick={handleLogout}
             data-testid="button-signout"
           >
             <LogOut className="w-5 h-5" />

@@ -1,8 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import PgSession from "connect-pg-simple";
-import pkg from "pg";
-const { Pool } = pkg;
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -14,12 +10,6 @@ declare module 'http' {
   }
 }
 
-declare module 'express-session' {
-  interface SessionData {
-    userId: string;
-  }
-}
-
 app.use(express.json({
   limit: '50mb',
   verify: (req, _res, buf) => {
@@ -27,31 +17,6 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
-
-// Initialize PostgreSQL session store
-const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:password@localhost/heliumdb',
-});
-
-const PostgresqlStore = PgSession(session);
-const store = new PostgresqlStore({
-  pool: pgPool,
-  createTableIfMissing: true,
-});
-
-// Session middleware for user tracking
-app.use(session({
-  store,
-  secret: process.env.SESSION_SECRET || 'nutrascan-ai-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 30 * 24 * 60 * 60 * 1000
-  }
-}));
 
 app.use((req, res, next) => {
   const start = Date.now();
