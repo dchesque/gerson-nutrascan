@@ -105,15 +105,6 @@ export default function Profile() {
     }
   };
 
-  const mockUser = {
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    isPremium: false,
-    analysesUsed: 1,
-    totalSavings: 0,
-    totalAnalyses: 1,
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -122,7 +113,23 @@ export default function Profile() {
     );
   }
 
-  const user = userStatus || mockUser;
+  // Get user initials from email or name
+  const getUserInitials = () => {
+    if (userStatus?.account?.name) {
+      return userStatus.account.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    if (authUser?.email) {
+      return authUser.email.slice(0, 2).toUpperCase();
+    }
+    return "NS";
+  };
+
+  const displayName = userStatus?.account?.name || "NutraScan User";
+  const displayEmail = authUser?.email || "Not logged in";
+  const isPremium = userStatus?.isPremium || false;
+  const totalAnalyses = userStatus?.totalAnalyses || 0;
+  const totalSavings = userStatus?.totalSavings || 0;
+  const freeAnalysesUsed = userStatus?.freeAnalysesUsed || 0;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -131,14 +138,14 @@ export default function Profile() {
           <div className="flex items-center gap-4">
             <Avatar className="w-20 h-20 border-2 border-primary">
               <AvatarFallback className="text-2xl font-bold bg-primary/20">
-                NS
+                {getUserInitials()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold font-heading">NutraScan User</h1>
-              <p className="text-muted-foreground">Anonymous Session</p>
-              <Badge variant={user.isPremium ? "default" : "secondary"} className="mt-2">
-                {user.isPremium ? (
+              <h1 className="text-2xl font-bold font-heading">{displayName}</h1>
+              <p className="text-muted-foreground">{displayEmail}</p>
+              <Badge variant={isPremium ? "default" : "secondary"} className="mt-2">
+                {isPremium ? (
                   <>
                     <Crown className="w-3 h-3 mr-1" />
                     Premium
@@ -153,7 +160,7 @@ export default function Profile() {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {!user.isPremium && (
+        {!isPremium && (
           <Card className="p-6 border-primary/50 bg-primary/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -176,7 +183,7 @@ export default function Profile() {
           <Card className="p-4 text-center">
             <Activity className="w-6 h-6 mx-auto mb-2 text-primary" />
             <div className="text-2xl font-bold font-heading" data-testid="text-total-analyses">
-              {user.totalAnalyses}
+              {totalAnalyses}
             </div>
             <div className="text-xs text-muted-foreground">Analyses</div>
           </Card>
@@ -184,7 +191,7 @@ export default function Profile() {
           <Card className="p-4 text-center">
             <DollarSign className="w-6 h-6 mx-auto mb-2 text-primary" />
             <div className="text-2xl font-bold font-heading" data-testid="text-total-savings">
-              ${user.totalSavings.toFixed(2)}
+              ${totalSavings.toFixed(2)}
             </div>
             <div className="text-xs text-muted-foreground">Saved</div>
           </Card>
@@ -192,10 +199,10 @@ export default function Profile() {
           <Card className="p-4 text-center">
             <Crown className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
             <div className="text-2xl font-bold font-heading">
-              {user.isPremium ? "∞" : user.freeAnalysesUsed}
+              {isPremium ? "∞" : freeAnalysesUsed}
             </div>
             <div className="text-xs text-muted-foreground">
-              {user.isPremium ? "Unlimited" : "Used"}
+              {isPremium ? "Unlimited" : "Used"}
             </div>
           </Card>
         </div>
@@ -373,7 +380,7 @@ export default function Profile() {
           >
             <Crown className="w-5 h-5 text-muted-foreground" />
             <span className="flex-1 font-medium">
-              {user.isPremium ? "Manage Subscription" : "Upgrade to Premium"}
+              {isPremium ? "Manage Subscription" : "Upgrade to Premium"}
             </span>
           </button>
 

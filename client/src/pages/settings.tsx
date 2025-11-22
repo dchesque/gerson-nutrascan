@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { updateUserAccountAPI } from "@/lib/api";
 
 export default function Settings() {
@@ -115,21 +116,40 @@ export default function Settings() {
 
     setIsSavingAccount(true);
     try {
+      // Update profile in database
       await updateUserAccountAPI({
         name: accountData.name,
         phone: accountData.phone,
-        profileImage: accountData.profileImage || null,
+        profileImage: photoPreview || null,
       });
+
+      // Update password if provided
+      if (accountData.newPassword && accountData.currentPassword) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: accountData.newPassword
+        });
+        if (passwordError) {
+          throw new Error(passwordError.message);
+        }
+      }
+
       setIsEditingAccount(false);
       setIsEditingPhoto(false);
+      // Clear password fields
+      setAccountData(prev => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
       toast({
         title: "Account Updated",
         description: "Your account information has been saved successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save account information",
+        description: error.message || "Failed to save account information",
         variant: "destructive",
       });
     } finally {
