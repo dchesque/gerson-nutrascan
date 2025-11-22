@@ -96,7 +96,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('user_profiles')
         .insert({
           id: data.user.id,
-          email: data.user.email,
           is_premium: false,
           free_analyses_used: 0,
         });

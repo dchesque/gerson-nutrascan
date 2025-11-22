@@ -78,24 +78,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to save analysis:", error);
       }
 
-      // Increment free analyses count for logged-in users
-      if (userId) {
-        await supabaseAdmin
+      // Increment free analyses count for logged-in non-premium users
+      if (userId && !error) {
+        const { data: userProfile } = await supabaseAdmin
           .from('user_profiles')
-          .update({ free_analyses_used: supabaseAdmin.rpc('increment_free_analyses') })
-          .eq('id', userId);
-
-        // Alternative: increment manually if RPC doesn't exist
-        const { data: profile } = await supabaseAdmin
-          .from('user_profiles')
-          .select('free_analyses_used')
+          .select('is_premium, free_analyses_used')
           .eq('id', userId)
           .single();
 
-        if (profile) {
+        if (userProfile && !userProfile.is_premium) {
           await supabaseAdmin
             .from('user_profiles')
-            .update({ free_analyses_used: (profile.free_analyses_used || 0) + 1 })
+            .update({ free_analyses_used: (userProfile.free_analyses_used || 0) + 1 })
             .eq('id', userId);
         }
       }
