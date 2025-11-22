@@ -214,15 +214,15 @@ export async function getHistoryAPI(): Promise<HistoryItem[]> {
 }
 
 export async function updateUserProfileAPI(profile: {
-  age?: number;
-  weight?: number;
-  height?: number;
-  gender?: string;
-  healthGoals?: string;
-  allergies?: string;
-  medications?: string;
-  activityLevel?: string;
-  dietType?: string;
+  age?: number | null;
+  weight?: number | null;
+  height?: number | null;
+  gender?: string | null;
+  healthGoals?: string | null;
+  allergies?: string | null;
+  medications?: string | null;
+  activityLevel?: string | null;
+  dietType?: string | null;
 }): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -230,23 +230,27 @@ export async function updateUserProfileAPI(profile: {
     throw new Error("Not authenticated");
   }
 
+  // Build update object - include all fields that were passed (even null for clearing)
+  const updateData: Record<string, number | string | null> = {
+    age: profile.age ?? null,
+    weight: profile.weight ?? null,
+    height: profile.height ?? null,
+    gender: profile.gender ?? null,
+    health_goals: profile.healthGoals ?? null,
+    allergies: profile.allergies ?? null,
+    medications: profile.medications ?? null,
+    activity_level: profile.activityLevel ?? null,
+    diet_type: profile.dietType ?? null,
+  };
+
   const { error } = await supabase
     .from('user_profiles')
-    .update({
-      age: profile.age,
-      weight: profile.weight,
-      height: profile.height,
-      gender: profile.gender,
-      health_goals: profile.healthGoals,
-      allergies: profile.allergies,
-      medications: profile.medications,
-      activity_level: profile.activityLevel,
-      diet_type: profile.dietType,
-    })
+    .update(updateData)
     .eq('id', user.id);
 
   if (error) {
-    throw new Error("Failed to update profile");
+    console.error("Failed to update profile:", error);
+    throw new Error(`Failed to update profile: ${error.message}`);
   }
 }
 

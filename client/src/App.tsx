@@ -14,6 +14,8 @@ import Profile from "@/pages/profile";
 import Subscribe from "@/pages/subscribe";
 import Pricing from "@/pages/pricing";
 import Settings from "@/pages/settings";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
 import BottomNav from "@/components/BottomNav";
 
 function Router() {
@@ -32,7 +34,9 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/auth" component={Auth} />
-        
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
+
         {isAuthenticated && (
           <>
             <Route path="/scan" component={Scan} />
@@ -44,7 +48,7 @@ function Router() {
             <Route path="/settings" component={Settings} />
           </>
         )}
-        
+
         {!isAuthenticated && (
           <>
             <Route path="/scan" component={Auth} />
@@ -56,7 +60,7 @@ function Router() {
             <Route path="/settings" component={Auth} />
           </>
         )}
-        
+
         <Route component={NotFound} />
       </Switch>
       {isAuthenticated && <BottomNav />}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Bell, Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2, User, Mail, Phone, Eye, EyeOff, Camera, X } from "lucide-react";
+import { Moon, Globe, Lock, Info, HelpCircle, LogOut, ChevronRight, Loader2, User, Mail, Phone, Eye, EyeOff, Camera, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -442,47 +442,6 @@ export default function Settings() {
           </Card>
         </section>
 
-        {/* Notifications & Alerts Section */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-semibold font-heading">Notifications & Alerts</h2>
-
-          <Card className="divide-y divide-border">
-            <div className="px-4 py-4 flex items-center justify-between hover-elevate cursor-pointer">
-              <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium">Push Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive app alerts and updates</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.notifications}
-                onCheckedChange={toggleNotifications}
-                data-testid="toggle-notifications"
-              />
-            </div>
-
-            <div className="px-4 py-4 flex items-center justify-between hover-elevate cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 text-primary">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2v20M2 12h20" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-medium">Price Alerts</p>
-                  <p className="text-sm text-muted-foreground">Notify when supplement prices drop</p>
-                </div>
-              </div>
-              <Switch
-                checked={settings.priceAlerts}
-                onCheckedChange={togglePriceAlerts}
-                data-testid="toggle-price-alerts"
-              />
-            </div>
-          </Card>
-        </section>
-
         {/* Display Section */}
         <section className="space-y-4">
           <h2 className="text-lg font-semibold font-heading">Display</h2>
@@ -548,6 +507,7 @@ export default function Settings() {
 
             <button
               className="w-full px-4 py-4 flex items-center justify-between hover-elevate text-left"
+              onClick={() => setLocation("/privacy-policy")}
               data-testid="button-privacy-policy"
             >
               <div className="flex items-center gap-3">
@@ -562,6 +522,7 @@ export default function Settings() {
 
             <button
               className="w-full px-4 py-4 flex items-center justify-between hover-elevate text-left"
+              onClick={() => setLocation("/terms-of-service")}
               data-testid="button-terms"
             >
               <div className="flex items-center gap-3">

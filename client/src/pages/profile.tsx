@@ -66,15 +66,15 @@ export default function Profile() {
     setIsSaving(true);
     try {
       await updateUserProfileAPI({
-        age: profileData.age ? parseInt(profileData.age) : undefined,
-        weight: profileData.weight ? parseInt(profileData.weight) : undefined,
-        height: profileData.height ? parseInt(profileData.height) : undefined,
-        gender: profileData.gender || undefined,
-        healthGoals: profileData.healthGoals || undefined,
-        allergies: profileData.allergies || undefined,
-        medications: profileData.medications || undefined,
-        activityLevel: profileData.activityLevel || undefined,
-        dietType: profileData.dietType || undefined,
+        age: profileData.age ? parseInt(profileData.age) : null,
+        weight: profileData.weight ? parseInt(profileData.weight) : null,
+        height: profileData.height ? parseInt(profileData.height) : null,
+        gender: profileData.gender.trim() || null,
+        healthGoals: profileData.healthGoals.trim() || null,
+        allergies: profileData.allergies.trim() || null,
+        medications: profileData.medications.trim() || null,
+        activityLevel: profileData.activityLevel.trim() || null,
+        dietType: profileData.dietType.trim() || null,
       });
       setIsEditing(false);
       toast({
@@ -82,6 +82,7 @@ export default function Profile() {
         description: "Your health profile has been saved successfully",
       });
     } catch (error) {
+      console.error("Save profile error:", error);
       toast({
         title: "Error",
         description: "Failed to save profile",
