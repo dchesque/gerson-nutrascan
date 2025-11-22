@@ -32,6 +32,8 @@ export interface AnalysisResult {
     location?: string;
     distance?: string;
   }>;
+  benefits?: string;
+  productImage?: string;
 }
 
 export interface UserStatus {
@@ -64,6 +66,8 @@ export interface HistoryItem {
   brand: string;
   score: number;
   createdAt: Date;
+  totalSavings: number;
+  inputType: string;
 }
 
 export async function analyzeSupplementAPI(
@@ -116,12 +120,14 @@ export async function getAnalysisAPI(id: string): Promise<AnalysisResult> {
   return {
     analysisId: data.id,
     productName: data.product_name,
-    brand: data.brand,
+    brand: data.brand || "Unknown Brand",
     score: data.score,
-    ingredients: data.ingredients as any,
-    totalSavings: data.total_savings / 100,
-    onlineAlternatives: data.online_alternatives as any,
-    localAlternatives: data.local_alternatives as any,
+    ingredients: data.ingredients as any || [],
+    totalSavings: (data.total_savings || 0) / 100,
+    onlineAlternatives: data.online_alternatives as any || [],
+    localAlternatives: data.local_alternatives as any || [],
+    benefits: data.benefits || undefined,
+    productImage: data.product_image || undefined,
   };
 }
 
@@ -187,20 +193,23 @@ export async function getHistoryAPI(): Promise<HistoryItem[]> {
 
   const { data, error } = await supabase
     .from('analyses')
-    .select('id, product_name, brand, score, created_at')
+    .select('id, product_name, brand, score, created_at, total_savings, input_type')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
+    console.error("Failed to fetch history:", error);
     throw new Error("Failed to fetch history");
   }
 
   return (data || []).map((item) => ({
     id: item.id,
     productName: item.product_name,
-    brand: item.brand,
+    brand: item.brand || "Unknown Brand",
     score: item.score,
     createdAt: new Date(item.created_at),
+    totalSavings: (item.total_savings || 0) / 100, // Convert cents to dollars
+    inputType: item.input_type || "text",
   }));
 }
 

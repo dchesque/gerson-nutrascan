@@ -1,577 +1,192 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Filter, Search, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import {
+  Clock,
+  TrendingUp,
+  DollarSign,
+  ChevronRight,
+  Search,
+  Filter,
+  Calendar,
+  Package,
+  Camera,
+  FileText,
+  Mic,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import HistoryItem from "@/components/HistoryItem";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { getHistoryAPI } from "@/lib/api";
+import type { HistoryItem } from "@/lib/api";
+import ScoreDisplay from "@/components/ScoreDisplay";
 
 export default function History() {
   const [, setLocation] = useLocation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "high" | "low">("all");
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterScore, setFilterScore] = useState<"all" | "high" | "medium" | "low">("all");
   const { toast } = useToast();
 
   useEffect(() => {
     loadHistory();
   }, []);
 
+  useEffect(() => {
+    filterHistory();
+  }, [history, searchQuery, filterScore]);
+
   const loadHistory = async () => {
+    setLoading(true);
     try {
-      const { getHistoryAPI } = await import("@/lib/api");
       const data = await getHistoryAPI();
       setHistory(data);
-    } catch (error) {
+      setFilteredHistory(data);
+    } catch (error: any) {
       console.error("Failed to load history:", error);
+      // Don't show error toast for unauthenticated users - just show empty state
+      if (error.message !== "Not authenticated") {
+        toast({
+          title: "Error",
+          description: "Failed to load analysis history",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const mockHistory = [
-    {
-      id: "0",
-      productName: "BellySlim",
-      brand: "BellySlim",
-      score: 28,
-      date: "Just now",
-      benefits: "Weight loss support, Metabolism boost, Fat burning",
-      productImage: "/attached_assets/1-POTE_1763671886862.png",
-      url: "https://www.amazon.com/s?k=BellySlim+Weight+Loss+Gummies",
-    },
-    {
-      id: "1",
-      productName: "Premium Vitamin D3 + K2",
-      brand: "Nature Made",
-      score: 92,
-      date: "2 hours ago",
-      benefits: "Bone health, Immune support, Cardiovascular health",
-      url: "https://www.amazon.com/Nature-Made-Vitamin-Softgels-Capsules/s?k=Nature+Made+D3+K2",
-    },
-    {
-      id: "2",
-      productName: "Daily Multivitamin Complex",
-      brand: "One A Day",
-      score: 72,
-      date: "Yesterday",
-      benefits: "Energy, Immune support, Overall wellness",
-      url: "https://www.amazon.com/One-Day-Multivitamin-Complete-Vitamins/s?k=One+A+Day+Multivitamin",
-    },
-    {
-      id: "3",
-      productName: "Omega-3 Fish Oil 1000mg",
-      brand: "Nordic Naturals",
-      score: 85,
-      date: "3 days ago",
-      benefits: "Heart health, Brain function, Joint support",
-      url: "https://www.amazon.com/Nordic-Naturals-Omega-3-1000mg-Supplement/s?k=Nordic+Naturals+Omega+3",
-    },
-    {
-      id: "4",
-      productName: "Magnesium Glycinate 400mg",
-      brand: "Doctor's Best",
-      score: 78,
-      date: "1 week ago",
-      benefits: "Sleep quality, Muscle relaxation, Stress relief",
-      url: "https://www.amazon.com/Doctors-Best-Magnesium-Glycinate-Supplement/s?k=Doctor+Best+Magnesium+Glycinate",
-    },
-    {
-      id: "5",
-      productName: "Super B-Complex",
-      brand: "Now Foods",
-      score: 65,
-      date: "2 weeks ago",
-      benefits: "Energy production, Metabolism support, Stress management",
-      url: "https://www.amazon.com/Now-Foods-Super-B-Complex-Supplement/s?k=Now+Foods+B+Complex",
-    },
-  ];
+  const filterHistory = () => {
+    let filtered = [...history];
 
-  const mockResults: { [key: string]: any } = {
-    "0": {
-      productName: "BellySlim",
-      brand: "BellySlim",
-      score: 28,
-      totalSavings: 22.50,
-      benefits: "Weight loss support, Metabolism boost, Fat burning",
-      productImage: "/attached_assets/1-POTE_1763671886862.png",
-      ingredients: [
-        {
-          name: "Apple Cider Vinegar (Proprietary Blend)",
-          actualDosage: "175 mg per serving",
-          idealDosage: "500-750 mg per serving",
-          percentage: 23,
-          efficacy: "low" as const,
-          explanation: "Critical underdosage. Clinical studies show 500-750mg daily is required for metabolic benefits.",
-        },
-        {
-          name: "BHB (Beta-Hydroxybutyrate)",
-          actualDosage: "175 mg per serving",
-          idealDosage: "3000-5000 mg per serving",
-          percentage: 6,
-          efficacy: "low" as const,
-          explanation: "Extremely underdosed. Effective ketone supplementation requires 3000-5000mg per serving.",
-        },
-        {
-          name: "Calcium/Magnesium/Sodium (B-hydroxybutyrate salts)",
-          actualDosage: "175 mg per serving",
-          idealDosage: "1500-2000 mg per serving",
-          percentage: 9,
-          efficacy: "low" as const,
-          explanation: "Far below therapeutic levels. Proper mineral-BHB supplementation needs 1500-2000mg daily.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "Ketone BHB Advanced Formula",
-          brand: "Transparent Labs",
-          score: 85,
-          price: 49.99,
-          currentPrice: 59.99,
-          savings: 10.00,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Apple Cider Vinegar Plus",
-          brand: "Sports Research",
-          score: 79,
-          price: 18.99,
-          currentPrice: 24.99,
-          savings: 6.00,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "BHB Salts Capsules",
-          brand: "Keto Science",
-          score: 82,
-          price: 44.99,
-          location: "GNC",
-          distance: "0.8 mi",
-        },
-        {
-          name: "Premium Apple Cider Vinegar",
-          brand: "Nature's Bounty",
-          score: 76,
-          price: 15.99,
-          location: "CVS Pharmacy",
-          distance: "0.5 mi",
-        },
-      ],
-    },
-    "1": {
-      productName: "Premium Vitamin D3 + K2",
-      brand: "Nature Made",
-      score: 92,
-      totalSavings: 18.50,
-      benefits: "Bone health, Immune support, Cardiovascular health",
-      ingredients: [
-        {
-          name: "Vitamin D3 (Cholecalciferol)",
-          actualDosage: "1000 IU per serving",
-          idealDosage: "1000-2000 IU per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Optimal dosage. Clinical studies support 1000-2000 IU daily for bone and immune health.",
-        },
-        {
-          name: "Vitamin K2 (Menaquinone-7)",
-          actualDosage: "45 mcg per serving",
-          idealDosage: "45-180 mcg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Excellent dosage. Supports calcium absorption and cardiovascular health at this level.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "D3 + K2 Supreme",
-          brand: "Thorne",
-          score: 95,
-          price: 35.00,
-          currentPrice: 38.99,
-          savings: 3.99,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Vitamin D3 + K2 Complete",
-          brand: "BodyBio",
-          score: 88,
-          price: 28.00,
-          currentPrice: 32.99,
-          savings: 4.99,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "D3 + K2 Supplement",
-          brand: "Solgar",
-          score: 90,
-          price: 32.99,
-          location: "Whole Foods",
-          distance: "1.2 mi",
-        },
-        {
-          name: "Vitamin D3 + K2",
-          brand: "Nature's Way",
-          score: 85,
-          price: 24.99,
-          location: "Walgreens",
-          distance: "0.3 mi",
-        },
-      ],
-    },
-    "2": {
-      productName: "Daily Multivitamin Complex",
-      brand: "One A Day",
-      score: 72,
-      totalSavings: 15.00,
-      benefits: "Energy, Immune support, Overall wellness",
-      ingredients: [
-        {
-          name: "Vitamin A",
-          actualDosage: "900 mcg per serving",
-          idealDosage: "700-900 mcg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Meets recommended daily allowance for vision and immune function.",
-        },
-        {
-          name: "Vitamin C",
-          actualDosage: "75 mg per serving",
-          idealDosage: "75-100 mg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Adequate dosage for antioxidant and immune support benefits.",
-        },
-        {
-          name: "Vitamin B12",
-          actualDosage: "6 mcg per serving",
-          idealDosage: "2.4-6 mcg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Optimal level for energy metabolism and nerve function.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "Men's Multivitamin Plus",
-          brand: "MegaFood",
-          score: 88,
-          price: 42.00,
-          currentPrice: 49.99,
-          savings: 7.99,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Complete Daily Vitamin",
-          brand: "Rainbow Light",
-          score: 84,
-          price: 35.00,
-          currentPrice: 43.99,
-          savings: 8.99,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "Premium Multivitamin",
-          brand: "New Chapter",
-          score: 86,
-          price: 38.99,
-          location: "Whole Foods",
-          distance: "1.2 mi",
-        },
-        {
-          name: "Daily Multi",
-          brand: "Vitafusion",
-          score: 78,
-          price: 18.99,
-          location: "Target",
-          distance: "0.7 mi",
-        },
-      ],
-    },
-    "3": {
-      productName: "Omega-3 Fish Oil 1000mg",
-      brand: "Nordic Naturals",
-      score: 85,
-      totalSavings: 24.00,
-      benefits: "Heart health, Brain function, Joint support",
-      ingredients: [
-        {
-          name: "EPA (Eicosapentaenoic Acid)",
-          actualDosage: "400 mg per serving",
-          idealDosage: "300-500 mg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Excellent dosage. Supports cardiovascular and brain health at this level.",
-        },
-        {
-          name: "DHA (Docosahexaenoic Acid)",
-          actualDosage: "300 mg per serving",
-          idealDosage: "250-400 mg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Optimal for cognitive function and eye health benefits.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "Omega-3 Premium Plus",
-          brand: "Life Extension",
-          score: 92,
-          price: 48.00,
-          currentPrice: 59.99,
-          savings: 11.99,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Ultra Omega-3 Fish Oil",
-          brand: "Carlson",
-          score: 88,
-          price: 45.00,
-          currentPrice: 54.99,
-          savings: 9.99,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "Omega-3 Fish Oil Elite",
-          brand: "Barlean's",
-          score: 90,
-          price: 52.00,
-          location: "Whole Foods",
-          distance: "1.2 mi",
-        },
-        {
-          name: "Fish Oil Supplement",
-          brand: "Nature Made",
-          score: 80,
-          price: 28.99,
-          location: "CVS Pharmacy",
-          distance: "0.5 mi",
-        },
-      ],
-    },
-    "4": {
-      productName: "Magnesium Glycinate 400mg",
-      brand: "Doctor's Best",
-      score: 78,
-      totalSavings: 12.50,
-      benefits: "Sleep quality, Muscle relaxation, Stress relief",
-      ingredients: [
-        {
-          name: "Magnesium Glycinate",
-          actualDosage: "400 mg per serving",
-          idealDosage: "300-500 mg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Excellent bioavailable form. Optimal dosage for sleep and muscle support.",
-        },
-        {
-          name: "Glycine",
-          actualDosage: "Contains glycine complex",
-          idealDosage: "Included in chelate",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Glycinate form improves absorption and has calming properties.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "Magnesium Threonate Plus",
-          brand: "Life Extension",
-          score: 89,
-          price: 38.00,
-          currentPrice: 45.99,
-          savings: 7.99,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Magnesium Bisglycinate",
-          brand: "Thorne",
-          score: 85,
-          price: 35.00,
-          currentPrice: 42.99,
-          savings: 7.99,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "Magnesium Supplement",
-          brand: "Solgar",
-          score: 82,
-          price: 32.99,
-          location: "Whole Foods",
-          distance: "1.2 mi",
-        },
-        {
-          name: "Magnesium Glycinate",
-          brand: "Nature Made",
-          price: 22.99,
-          score: 76,
-          location: "Walgreens",
-          distance: "0.3 mi",
-        },
-      ],
-    },
-    "5": {
-      productName: "Super B-Complex",
-      brand: "Now Foods",
-      score: 65,
-      totalSavings: 8.75,
-      benefits: "Energy production, Metabolism support, Stress management",
-      ingredients: [
-        {
-          name: "Vitamin B1 (Thiamine)",
-          actualDosage: "100 mg per serving",
-          idealDosage: "1.1-1.2 mg per serving",
-          percentage: 8333,
-          efficacy: "medium" as const,
-          explanation: "Significantly exceeds needs. While water-soluble B vitamins are not toxic at high levels, standard supplementation is lower.",
-        },
-        {
-          name: "Vitamin B12 (Cyanocobalamin)",
-          actualDosage: "500 mcg per serving",
-          idealDosage: "2.4 mcg per serving",
-          percentage: 20833,
-          efficacy: "high" as const,
-          explanation: "High potency formula. Excess B12 is excreted in urine, but dosage is effective for energy support.",
-        },
-        {
-          name: "Folic Acid (Folate)",
-          actualDosage: "400 mcg per serving",
-          idealDosage: "400 mcg per serving",
-          percentage: 100,
-          efficacy: "high" as const,
-          explanation: "Meets recommended dosage for cellular energy and metabolism.",
-        },
-      ],
-      onlineAlternatives: [
-        {
-          name: "B-Complex Supreme",
-          brand: "Thorne",
-          score: 88,
-          price: 32.00,
-          currentPrice: 38.99,
-          savings: 6.99,
-          url: "https://amazon.com",
-        },
-        {
-          name: "Active B Complex",
-          brand: "Life Extension",
-          score: 84,
-          price: 28.00,
-          currentPrice: 34.99,
-          savings: 6.99,
-          url: "https://iherb.com",
-        },
-      ],
-      localAlternatives: [
-        {
-          name: "B-Complex Supplement",
-          brand: "Solgar",
-          score: 86,
-          price: 30.99,
-          location: "Whole Foods",
-          distance: "1.2 mi",
-        },
-        {
-          name: "B Complex Vitamins",
-          brand: "Nature's Way",
-          score: 78,
-          price: 18.99,
-          location: "Target",
-          distance: "0.7 mi",
-        },
-      ],
-    },
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.productName.toLowerCase().includes(query) ||
+          item.brand.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply score filter
+    if (filterScore !== "all") {
+      filtered = filtered.filter((item) => {
+        if (filterScore === "high") return item.score >= 70;
+        if (filterScore === "medium") return item.score >= 40 && item.score < 70;
+        if (filterScore === "low") return item.score < 40;
+        return true;
+      });
+    }
+
+    setFilteredHistory(filtered);
   };
 
   const formatDate = (date: Date) => {
     const now = new Date();
-    const diff = now.getTime() - new Date(date).getTime();
-    const hours = diff / (1000 * 60 * 60);
-    
-    if (hours < 1) return "Just now";
-    if (hours < 24) return `${Math.floor(hours)} hours ago`;
-    if (hours < 48) return "Yesterday";
-    if (hours < 168) return `${Math.floor(hours / 24)} days ago`;
-    return `${Math.floor(hours / 168)} weeks ago`;
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffHours = diffTime / (1000 * 60 * 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return "Just now";
+    if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
   };
 
-  const handleShare = async (e: React.MouseEvent, item: any) => {
-    e.stopPropagation();
-    
-    // Encode the analysis data
-    const analysisData = btoa(JSON.stringify(mockResults[item.id]));
-    const shareLink = `${window.location.origin}/?share=${item.id}&data=${analysisData}`;
-    
-    const shareData = {
-      title: `Check out "${item.productName}" supplement analysis - Score: ${item.score}/100`,
-      text: `I found a ${item.score}/100 rated ${item.productName} supplement on NutraScan AI. Download the app to see my full analysis and get personalized recommendations!`,
-      url: shareLink,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        toast({
-          title: "Shared!",
-          description: "Your analysis has been shared",
-        });
-      } catch (error) {
-        console.error("Error sharing:", error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareLink);
-        toast({
-          title: "Link copied!",
-          description: "Share link copied to clipboard",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to copy share link",
-          variant: "destructive",
-        });
-      }
+  const getInputTypeIcon = (inputType: string) => {
+    switch (inputType.toLowerCase()) {
+      case "photo":
+        return <Camera className="w-3 h-3" />;
+      case "voice":
+        return <Mic className="w-3 h-3" />;
+      default:
+        return <FileText className="w-3 h-3" />;
     }
   };
 
-  const allHistory = history.length > 0 ? history : mockHistory;
-  const filteredHistory = allHistory.filter((item) => {
-    const matchesSearch =
-      item.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.brand.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleViewAnalysis = (item: HistoryItem) => {
+    // Store the analysis ID to fetch full data on results page
+    sessionStorage.setItem("currentAnalysisId", item.id);
+    // Clear any existing cached analysis to force fresh fetch
+    sessionStorage.removeItem("currentAnalysis");
+    setLocation("/results");
+  };
 
-    const matchesFilter =
-      filter === "all" ||
-      (filter === "high" && item.score >= 71) ||
-      (filter === "low" && item.score < 71);
-
-    return matchesSearch && matchesFilter;
-  });
+  // Calculate statistics
+  const totalSavings = history.reduce((sum, item) => sum + (item.totalSavings || 0), 0);
+  const averageScore = history.length > 0
+    ? Math.round(history.reduce((sum, item) => sum + item.score, 0) / history.length)
+    : 0;
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card border-b border-card-border">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      {/* Header with Statistics */}
+      <header className="bg-gradient-to-b from-primary/10 to-background border-b border-card-border sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-6">
           <h1 className="text-2xl font-bold font-heading mb-4">Analysis History</h1>
-          
+
+          {!loading && history.length > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Package className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Analyses</p>
+                    <p className="text-lg font-bold">{history.length}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Saved</p>
+                    <p className="text-lg font-bold text-green-600">
+                      ${totalSavings.toFixed(0)}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Avg Score</p>
+                    <p className="text-lg font-bold text-blue-600">{averageScore}</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Search and Filter */}
+        {!loading && history.length > 0 && (
           <div className="space-y-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search supplements..."
+                placeholder="Search by product or brand..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -579,75 +194,155 @@ export default function History() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <div className="flex gap-2">
-                <Badge
-                  variant={filter === "all" ? "default" : "outline"}
-                  className="cursor-pointer hover-elevate"
-                  onClick={() => setFilter("all")}
-                  data-testid="filter-all"
-                >
-                  All
-                </Badge>
-                <Badge
-                  variant={filter === "high" ? "default" : "outline"}
-                  className="cursor-pointer hover-elevate"
-                  onClick={() => setFilter("high")}
-                  data-testid="filter-high"
-                >
-                  High Score
-                </Badge>
-                <Badge
-                  variant={filter === "low" ? "default" : "outline"}
-                  className="cursor-pointer hover-elevate"
-                  onClick={() => setFilter("low")}
-                  data-testid="filter-low"
-                >
-                  Low Score
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-2xl mx-auto px-4 py-6">
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : filteredHistory.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
-              <Search className="w-12 h-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No supplements found</h3>
-            <p className="text-muted-foreground mb-6">
-              {searchQuery ? "Try a different search term" : "Start scanning supplements to build your history"}
-            </p>
-            {!searchQuery && (
-              <Button onClick={() => setLocation("/")} data-testid="button-scan-first">
-                Scan Your First Supplement
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <Button
+                size="sm"
+                variant={filterScore === "all" ? "default" : "outline"}
+                onClick={() => setFilterScore("all")}
+                data-testid="filter-all"
+              >
+                All
               </Button>
-            )}
+              <Button
+                size="sm"
+                variant={filterScore === "high" ? "default" : "outline"}
+                onClick={() => setFilterScore("high")}
+                className="whitespace-nowrap"
+                data-testid="filter-high"
+              >
+                High (70+)
+              </Button>
+              <Button
+                size="sm"
+                variant={filterScore === "medium" ? "default" : "outline"}
+                onClick={() => setFilterScore("medium")}
+                className="whitespace-nowrap"
+                data-testid="filter-medium"
+              >
+                Medium (40-69)
+              </Button>
+              <Button
+                size="sm"
+                variant={filterScore === "low" ? "default" : "outline"}
+                onClick={() => setFilterScore("low")}
+                className="whitespace-nowrap"
+                data-testid="filter-low"
+              >
+                Low (&lt;40)
+              </Button>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredHistory.map((item) => (
-              <HistoryItem
-                key={item.id}
-                {...item}
-                date={typeof item.createdAt === 'string' ? item.createdAt : formatDate(item.createdAt)}
-                onClick={() => {
-                  console.log("View history item:", item.id);
-                  sessionStorage.setItem("currentAnalysis", JSON.stringify(mockResults[item.id]));
-                  setLocation("/results");
-                }}
-                onShare={(e) => handleShare(e, item)}
-              />
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="p-4 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-muted rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-3 bg-muted rounded w-1/3" />
+                  </div>
+                </div>
+              </Card>
             ))}
           </div>
+        )}
+
+        {/* Empty State - No History */}
+        {!loading && history.length === 0 && (
+          <Card className="p-12 text-center">
+            <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+              <Clock className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">No Analysis History Yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+              Start analyzing supplements to see your history here. We'll track all your analyses so you can easily review them later.
+            </p>
+            <Button onClick={() => setLocation("/scan")} data-testid="button-scan-first">
+              Start First Analysis
+            </Button>
+          </Card>
+        )}
+
+        {/* History List */}
+        {!loading && filteredHistory.length > 0 && (
+          <div className="space-y-3">
+            {filteredHistory.map((item) => (
+              <Card
+                key={item.id}
+                className="p-4 hover:shadow-md transition-all cursor-pointer hover:border-primary/30"
+                onClick={() => handleViewAnalysis(item)}
+                data-testid={`history-item-${item.id}`}
+              >
+                <div className="flex items-center gap-4">
+                  {/* Score Display */}
+                  <div className="flex-shrink-0">
+                    <ScoreDisplay score={item.score} size="sm" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold truncate">{item.productName}</h3>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground truncate mb-2">
+                      {item.brand}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(item.createdAt)}
+                      </span>
+
+                      {item.totalSavings > 0 && (
+                        <span className="flex items-center gap-1 text-green-600 font-medium">
+                          <DollarSign className="w-3 h-3" />
+                          ${item.totalSavings.toFixed(0)} saved
+                        </span>
+                      )}
+
+                      <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                        {getInputTypeIcon(item.inputType)}
+                        {item.inputType}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* No Results State - Search/Filter */}
+        {!loading && history.length > 0 && filteredHistory.length === 0 && (
+          <Card className="p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+              <Search className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold mb-2">No Results Found</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Try adjusting your search term or filter
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("");
+                setFilterScore("all");
+              }}
+            >
+              Clear Filters
+            </Button>
+          </Card>
         )}
       </main>
     </div>

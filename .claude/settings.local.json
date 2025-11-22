@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run check:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMigrate authentication and database from Express Session to Supabase\n\n- Replace express-session/PostgreSQL auth with Supabase Auth\n- Add Supabase client for frontend (client/src/lib/supabase.ts)\n- Add Supabase admin client for backend (server/supabase.ts)\n- Add JWT validation middleware (server/middleware/auth.ts)\n- Update AuthContext to use Supabase signUp, signIn, signOut\n- Update API calls to use Supabase directly for user data and history\n- Remove session middleware from Express server\n- Remove old auth routes (/api/auth/*)\n- Update profile and settings pages to use Supabase\n- Update types to match Supabase schema (user_profiles, analyses)\n- Remove obsolete files (drizzle.config.ts, server/storage.ts)\n- Add .env to gitignore for security\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(npm run dev)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(git commit:*)",
+      "mcp__ide__getDiagnostics"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
