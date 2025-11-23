@@ -66,6 +66,12 @@ export default function ScanFree() {
           title: "Sign Up for More",
           description: "Create a free account to unlock unlimited analyses",
         });
+      } else if (error.message?.includes("indisponível") || error.message?.includes("503")) {
+        toast({
+          title: "Análise Indisponível",
+          description: "O serviço de análise está temporariamente indisponível. Por favor, tente novamente mais tarde.",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Analysis Failed",

@@ -127,6 +127,20 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Analysis error:', errorMessage)
+
+    // Verificar se é erro de webhook não configurado
+    if (errorMessage.includes('N8N_WEBHOOK_URL not configured') ||
+        errorMessage.includes('Webhook error') ||
+        errorMessage.includes('fetch failed')) {
+      return NextResponse.json(
+        {
+          message: 'Análise temporariamente indisponível. Tente novamente mais tarde.',
+          serviceUnavailable: true
+        },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
       { message: errorMessage || 'Analysis failed' },
       { status: 500 }
