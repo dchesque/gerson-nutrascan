@@ -1,9 +1,20 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+const isDev = process.env.NODE_ENV !== "production";
+
+// Simple log function that doesn't depend on vite
+function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
 declare module 'http' {
   interface IncomingMessage {
@@ -60,9 +71,12 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  if (app.get("env") === "development") {
+  // Use dynamic imports to avoid loading vite in production
+  if (isDev) {
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
+    const { serveStatic } = await import("./static");
     serveStatic(app);
   }
 
