@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { analyzeSupplementWithAI } from '@/lib/openai'
+import { analyzeSupplementViaWebhook } from '@/lib/n8n'
 
 // Track free analyses by IP for anonymous users
 const anonymousAnalyses = new Map<string, number>()
@@ -9,7 +9,7 @@ const anonymousAnalyses = new Map<string, number>()
 export async function POST(request: NextRequest) {
   try {
     const { type, content } = await request.json()
-    
+
     if (!content || !type) {
       return NextResponse.json(
         { message: 'Missing required fields' },
@@ -17,14 +17,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validar tipo
+    if (!['text', 'image', 'audio'].includes(type)) {
+      return NextResponse.json(
+        { message: 'Invalid type. Must be: text, image, or audio' },
+        { status: 400 }
+      )
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
-    const clientIp = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
+
+    const clientIp = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
                      'unknown'
 
     const supabaseAdmin = createServiceClient()
+
+    // Preparar dados do usuário para enviar ao webhook
+    let userData = null
+    let userProfile = null
 
     // Check free analysis limit for anonymous users
     if (!user) {
@@ -37,54 +49,69 @@ export async function POST(request: NextRequest) {
       }
       anonymousAnalyses.set(clientIp, currentCount + 1)
     } else {
-      // Check user's free analyses limit if not premium
-      const { data: userProfile } = await supabaseAdmin
+      // Buscar perfil do usuário
+      const { data: profile } = await supabaseAdmin
         .from('user_profiles')
-        .select('is_premium, free_analyses_used')
+        .select('*')
         .eq('id', user.id)
         .single()
 
-      if (userProfile && !userProfile.is_premium && userProfile.free_analyses_used >= 1) {
+      userProfile = profile
+
+      if (profile && !profile.is_premium && profile.free_analyses_used >= 1) {
         return NextResponse.json(
-          { message: 'Free analysis limit reached. Please upgrade to premium.', needsPremium: true },
+          { message: 'Free analysis limit reached. Please upgrade to premium.', needsUpgrade: true },
           { status: 403 }
         )
       }
+
+      // Preparar dados do usuário para o webhook
+      userData = {
+        id: user.id,
+        email: user.email,
+        isPremium: profile?.is_premium || false,
+        healthProfile: profile ? {
+          age: profile.age,
+          weight: profile.weight,
+          height: profile.height,
+          goals: profile.goals,
+          allergies: profile.allergies,
+          medications: profile.medications,
+          activityLevel: profile.activity_level,
+          dietType: profile.diet_type,
+        } : undefined
+      }
     }
 
-    // Perform analysis
-    const analysisResult = await analyzeSupplementWithAI(content)
+    // Chamar webhook n8n para análise
+    const analysis = await analyzeSupplementViaWebhook({
+      type: type as "text" | "image" | "audio",
+      content,
+      user: userData || undefined,
+    })
 
-    // Save to database
-    const { data: analysis, error } = await supabaseAdmin
-      .from('analyses')
-      .insert({
-        user_id: user?.id || null,
-        product_name: analysisResult.productName,
-        brand: analysisResult.brand,
-        score: analysisResult.score,
-        input_type: type,
-        input_content: content,
-        ingredients: analysisResult.ingredients,
-        total_savings: Math.round(analysisResult.totalSavings * 100),
-        online_alternatives: analysisResult.onlineAlternatives,
-        local_alternatives: analysisResult.localAlternatives,
-      })
-      .select()
-      .single()
+    // Gerar ID único para a análise
+    const analysisId = crypto.randomUUID()
 
-    if (error) {
-      console.error('Failed to save analysis:', error)
-    }
+    // Salvar no banco se usuário está logado
+    if (user) {
+      await supabaseAdmin
+        .from('analyses')
+        .insert({
+          id: analysisId,
+          user_id: user.id,
+          product_name: analysis.productName,
+          brand: analysis.brand,
+          score: analysis.score,
+          input_type: type,
+          input_content: content.substring(0, 1000), // Limitar tamanho do conteúdo salvo
+          ingredients: analysis.ingredients,
+          total_savings: Math.round(analysis.totalSavings * 100),
+          online_alternatives: analysis.onlineAlternatives,
+          local_alternatives: analysis.localAlternatives,
+        })
 
-    // Increment free analyses count for logged-in non-premium users
-    if (user && !error) {
-      const { data: userProfile } = await supabaseAdmin
-        .from('user_profiles')
-        .select('is_premium, free_analyses_used')
-        .eq('id', user.id)
-        .single()
-
+      // Incrementar contador de análises gratuitas
       if (userProfile && !userProfile.is_premium) {
         await supabaseAdmin
           .from('user_profiles')
@@ -94,15 +121,14 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      analysisId: analysis?.id || 'temp-' + Date.now(),
-      ...analysisResult,
-      totalSavings: analysisResult.totalSavings,
-      isFreeTrial: !user,
+      analysisId,
+      ...analysis,
     })
-  } catch (error: any) {
-    console.error('Analysis error:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Analysis error:', errorMessage)
     return NextResponse.json(
-      { message: 'Analysis failed: ' + error.message },
+      { message: errorMessage || 'Analysis failed' },
       { status: 500 }
     )
   }

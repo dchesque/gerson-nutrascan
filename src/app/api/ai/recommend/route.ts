@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getPersonalizedRecommendations } from '@/lib/openai'
+import { getPersonalizedRecommendations } from '@/lib/n8n'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { goal } = await request.json()
-    
+
     if (!goal) {
       return NextResponse.json(
         { message: 'Goal is required' },
@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
 
     const recommendation = await getPersonalizedRecommendations(goal)
     return NextResponse.json({ recommendation })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { message: 'Error getting recommendation: ' + error.message },
+      { message: 'Error getting recommendation: ' + errorMessage },
       { status: 500 }
     )
   }

@@ -23,8 +23,8 @@ In EasyPanel, go to your app settings and add these **Build Arguments**:
 
 | Build Argument | Description |
 |----------------|-------------|
-| `VITE_SUPABASE_URL` | Your Supabase project URL (e.g., `https://xxx.supabase.co`) |
-| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL (e.g., `https://xxx.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
 
 ### 4. Set Environment Variables (Runtime)
 
@@ -33,13 +33,13 @@ Add the following **Environment Variables** for the Node.js server:
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `NODE_ENV` | `production` | Yes |
-| `PORT` | `5000` | Yes |
-| `VITE_SUPABASE_URL` | Your Supabase project URL | Yes |
-| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/public key | Yes |
-| `SUPABASE_SERVICE_KEY` | Your Supabase service role key (for admin operations) | Yes |
-| `OPENAI_API_KEY` | Your OpenAI API key | Yes |
+| `PORT` | `3000` | Yes |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon/public key | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (for admin operations) | Yes |
+| `N8N_WEBHOOK_URL` | Your n8n webhook URL for supplement analysis | Yes |
 | `STRIPE_SECRET_KEY` | Your Stripe secret key | Optional |
-| `STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key | Optional |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key | Optional |
 | `STRIPE_WEBHOOK_SECRET` | Your Stripe webhook secret | Optional |
 
 ### 5. Configure Domain
@@ -58,17 +58,92 @@ Click "Deploy" and wait for the build to complete.
 
 **IMPORTANT**: Use these EXACT variable names. The code expects these specific names:
 
-### Build-Time Variables (for Vite frontend)
+### Build-Time Variables (for Next.js frontend)
 These are baked into the JavaScript bundle during build:
-- `VITE_SUPABASE_URL` - Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase anon key
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
 
 ### Runtime Variables (for Node.js server)
 These are read by the server at startup:
-- `VITE_SUPABASE_URL` - Same as above (used by auth middleware)
-- `VITE_SUPABASE_ANON_KEY` - Same as above (used by auth middleware)
-- `SUPABASE_SERVICE_KEY` - Service role key for admin database operations
-- `OPENAI_API_KEY` - For AI analysis features
+- `NEXT_PUBLIC_SUPABASE_URL` - Same as above (used by auth middleware)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Same as above (used by auth middleware)
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key for admin database operations
+- `N8N_WEBHOOK_URL` - URL do webhook n8n para análise de suplementos
+
+---
+
+## N8N Webhook Configuration
+
+The app now uses n8n webhooks for AI analysis instead of direct OpenAI integration.
+
+### Webhook Payload Format (sent to n8n)
+```json
+{
+  "type": "text" | "image" | "audio",
+  "content": "string - text, base64 image, or base64 audio",
+  "user": {
+    "id": "user uuid",
+    "email": "email@example.com",
+    "isPremium": false,
+    "healthProfile": {
+      "age": 30,
+      "weight": 70,
+      "height": 175,
+      "goals": ["muscle gain", "energy"],
+      "allergies": ["gluten"],
+      "medications": [],
+      "activityLevel": "moderate",
+      "dietType": "omnivore"
+    }
+  },
+  "timestamp": "2025-11-23T12:00:00.000Z"
+}
+```
+
+### Expected Response Format (from n8n)
+```json
+{
+  "success": true,
+  "data": {
+    "productName": "Product Name",
+    "brand": "Brand",
+    "score": 85,
+    "ingredients": [
+      {
+        "name": "Vitamin D3",
+        "actualDosage": "2000 IU",
+        "idealDosage": "2000-4000 IU",
+        "percentage": 90,
+        "efficacy": "high",
+        "explanation": "Adequate dosage..."
+      }
+    ],
+    "totalSavings": 25.50,
+    "onlineAlternatives": [
+      {
+        "name": "Alternative Product",
+        "brand": "Brand",
+        "score": 92,
+        "price": 29.99,
+        "currentPrice": 39.99,
+        "savings": 10,
+        "url": "https://..."
+      }
+    ],
+    "localAlternatives": [
+      {
+        "name": "Local Product",
+        "brand": "Brand",
+        "score": 88,
+        "price": 32.99,
+        "location": "Pharmacy X",
+        "distance": "0.5 km"
+      }
+    ]
+  }
+}
+```
 
 ---
 
@@ -78,8 +153,8 @@ The app uses a multi-stage Docker build:
 
 1. **Builder Stage**:
    - Installs dependencies
-   - Receives `VITE_*` build arguments
-   - Builds frontend (Vite) and backend (esbuild)
+   - Receives `NEXT_PUBLIC_*` build arguments
+   - Builds Next.js application
 
 2. **Production Stage**:
    - Minimal Alpine image
@@ -88,7 +163,7 @@ The app uses a multi-stage Docker build:
 
 ### Exposed Port
 
-The app runs on port `5000` by default.
+The app runs on port `3000` by default.
 
 ### Health Check
 
@@ -109,8 +184,6 @@ Recommended minimum resources:
 - **CPU**: 0.5 - 1 vCPU
 - **Storage**: 1GB
 
-Note: Puppeteer (used for web scraping alternatives) requires additional memory. Consider 1GB+ RAM for production.
-
 ---
 
 ## Troubleshooting
@@ -119,7 +192,7 @@ Note: Puppeteer (used for web scraping alternatives) requires additional memory.
 
 **Cause**: Build arguments not configured.
 
-**Solution**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as **Build Arguments** (not just Environment Variables).
+**Solution**: Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as **Build Arguments** (not just Environment Variables).
 
 ### App Crashes on Start
 
@@ -128,20 +201,20 @@ Note: Puppeteer (used for web scraping alternatives) requires additional memory.
 3. Ensure Supabase connection is working
 4. Verify the health endpoint: `https://your-domain.com/api/health`
 
+### "N8N_WEBHOOK_URL not configured" Error
+
+**Cause**: Missing webhook URL.
+
+**Solution**: Add `N8N_WEBHOOK_URL` environment variable with your n8n webhook endpoint.
+
 ### "Invalid Supabase URL" or Auth Errors
 
 **Cause**: Wrong variable names or missing variables.
 
 **Solution**: Ensure you're using:
-- `VITE_SUPABASE_URL` (NOT `SUPABASE_URL`)
-- `VITE_SUPABASE_ANON_KEY` (NOT `SUPABASE_ANON_KEY`)
-- `SUPABASE_SERVICE_KEY` (NOT `SUPABASE_SERVICE_ROLE_KEY`)
-
-### Puppeteer Issues
-
-If you see Chromium/Puppeteer errors:
-- The Dockerfile already includes all required dependencies
-- Ensure the container has at least 512MB RAM
+- `NEXT_PUBLIC_SUPABASE_URL` (NOT `SUPABASE_URL`)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` (NOT `SUPABASE_ANON_KEY`)
+- `SUPABASE_SERVICE_ROLE_KEY` (NOT `SUPABASE_SERVICE_KEY`)
 
 ---
 
@@ -150,17 +223,17 @@ If you see Chromium/Puppeteer errors:
 ```bash
 # Build the image with build arguments
 docker build \
-  --build-arg VITE_SUPABASE_URL=https://your-project.supabase.co \
-  --build-arg VITE_SUPABASE_ANON_KEY=your_anon_key \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key \
   -t nutrascan .
 
 # Run the container with runtime environment variables
-docker run -p 5000:5000 \
+docker run -p 3000:3000 \
   -e NODE_ENV=production \
-  -e VITE_SUPABASE_URL=https://your-project.supabase.co \
-  -e VITE_SUPABASE_ANON_KEY=your_anon_key \
-  -e SUPABASE_SERVICE_KEY=your_service_key \
-  -e OPENAI_API_KEY=your_openai_key \
+  -e NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key \
+  -e SUPABASE_SERVICE_ROLE_KEY=your_service_key \
+  -e N8N_WEBHOOK_URL=https://your-n8n.com/webhook/nutrascan-analyze \
   nutrascan
 ```
 
@@ -171,12 +244,12 @@ docker run -p 5000:5000 \
 Create a `.env` file with your variables:
 
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_role_key
-OPENAI_API_KEY=your_openai_key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+N8N_WEBHOOK_URL=https://your-n8n.com/webhook/nutrascan-analyze
 STRIPE_SECRET_KEY=your_stripe_secret
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
 ```
 

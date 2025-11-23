@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git -C \"C:\\Workspace\\gerson-nutrascan\" log --oneline -10)",
-      "Bash(dir /b \"C:\\Workspace\\gerson-nutrascan\\public\")"
+      "Bash(dir /b \"C:\\Workspace\\gerson-nutrascan\\public\")",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
