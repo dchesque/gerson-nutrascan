@@ -13,7 +13,13 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(git commit:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(npm run build:*)",
+      "Bash(set NODE_ENV=production)",
+      "Bash(node dist/index.js:*)",
+      "Bash(NODE_ENV=production node:*)",
+      "Bash(nul)",
+      "Bash(NODE_ENV=production PORT=5001 node:*)"
     ],
     "deny": [],
     "ask": []
