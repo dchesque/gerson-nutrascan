@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { serveStatic } from "./static";
 
 const app = express();
 const isDev = process.env.NODE_ENV !== "production";
@@ -71,12 +72,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Use dynamic imports to avoid loading vite in production
+  // In production, use serveStatic directly (imported at top)
+  // In development, dynamically load vite using a variable path
+  // to prevent esbuild from statically analyzing and bundling it
   if (isDev) {
-    const { setupVite } = await import("./vite");
-    await setupVite(app, server);
+    const vitePath = "./vite";
+    const viteModule = await import(/* @vite-ignore */ vitePath);
+    await viteModule.setupVite(app, server);
   } else {
-    const { serveStatic } = await import("./static");
     serveStatic(app);
   }
 
