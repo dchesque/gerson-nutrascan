@@ -6,6 +6,11 @@ yarn-error.log*
 
 # Build output (will be rebuilt in container)
 dist
+.next
+out
+
+# Backup and old files
+backup
 
 # Development files
 .git

@@ -1,0 +1,5 @@
+# NutraScan AI - Robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://nutrascan.ai/sitemap.xml

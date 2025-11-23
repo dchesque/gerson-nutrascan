@@ -1,0 +1,73 @@
+# =============================================================================
+# Easypanel Configuration for NutraScan AI
+# =============================================================================
+# This file documents the recommended Easypanel settings.
+# Import this configuration or set up manually in Easypanel UI.
+# =============================================================================
+
+services:
+  nutrascan:
+    type: app
+    source:
+      type: github
+      # Replace with your repository URL
+      repository: your-username/nutrascan
+      branch: main
+
+    build:
+      type: dockerfile
+      file: Dockerfile
+      # Build arguments (NEXT_PUBLIC_* variables needed at build time)
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 1024Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+
+    domains:
+      - host: nutrascan.yourdomain.com
+        port: 3000
+
+    healthCheck:
+      type: http
+      path: /api/health
+      port: 3000
+      interval: 30
+      timeout: 10
+      retries: 3
+      startPeriod: 40
+
+# =============================================================================
+# ENVIRONMENT VARIABLES TO SET IN EASYPANEL
+# =============================================================================
+# Go to: Service > Environment > Add the following variables:
+#
+# REQUIRED:
+# ---------
+# NEXT_PUBLIC_SUPABASE_URL      = https://xxx.supabase.co
+# NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbG...
+# SUPABASE_SERVICE_ROLE_KEY     = eyJhbG...
+# OPENAI_API_KEY                = sk-...
+#
+# OPTIONAL (for payments):
+# ------------------------
+# STRIPE_SECRET_KEY                   = sk_live_...
+# NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY  = pk_live_...
+# STRIPE_WEBHOOK_SECRET               = whsec_...
+#
+# =============================================================================
+# IMPORTANT: BUILD ARGUMENTS
+# =============================================================================
+# In Easypanel, you also need to set Build Arguments for NEXT_PUBLIC_* vars:
+# Go to: Service > Build > Arguments
+# Add the same NEXT_PUBLIC_* variables there too!
+# =============================================================================

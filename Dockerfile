@@ -1,61 +1,72 @@
-# ============================================
-# NUTRASCAN AI - PRODUCTION DOCKERFILE
-# ============================================
+# =============================================================================
+# NutraScan AI - Production Dockerfile for Next.js 15
+# Optimized for Easypanel deployment
+# =============================================================================
 
-# Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS base
 
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Build arguments for Vite (needed at build time)
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production=false
 
-# Convert ARGs to ENVs so Vite can access them during build
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-
-# Copy package files
-COPY package*.json ./
-
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci
-
-# Copy source code
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the application with environment variables
-# 1. Build frontend (Vite) -> dist/public
-# 2. Build backend (esbuild) -> dist/index.js
+# Build arguments for public environment variables (needed at build time)
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Build the application
 RUN npm run build
 
-# Stage 2: Production
-FROM node:20-alpine AS production
-
+# Production image, copy all the files and run next
+FROM base AS runner
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production
-
-# Copy built files from builder stage
-COPY --from=builder /app/dist ./dist
-
-# Copy attached_assets (images used by frontend)
-COPY --from=builder /app/attached_assets ./attached_assets
-
-# Set environment variables
 ENV NODE_ENV=production
-ENV PORT=5000
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Expose port
-EXPOSE 5000
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
+# Copy public folder
+COPY --from=builder /app/public ./public
 
-# Start the application
-CMD ["node", "dist/index.js"]
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+CMD ["node", "server.js"]
