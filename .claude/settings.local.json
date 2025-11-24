@@ -4,7 +4,8 @@
       "Bash(git -C \"C:\\Workspace\\gerson-nutrascan\" log --oneline -10)",
       "Bash(dir /b \"C:\\Workspace\\gerson-nutrascan\\public\")",
       "Bash(npm run build:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm run check:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,19 +8,30 @@ const anonymousAnalyses = new Map<string, number>()
 
 export async function POST(request: NextRequest) {
   try {
-    const { type, content } = await request.json()
+    const { type: rawType, content } = await request.json()
 
-    if (!content || !type) {
+    if (!content || !rawType) {
       return NextResponse.json(
         { message: 'Missing required fields' },
         { status: 400 }
       )
     }
 
+    // Normalizar tipo (frontend usa photo/voice, backend usa image/audio)
+    const typeMapping: Record<string, string> = {
+      'photo': 'image',
+      'voice': 'audio',
+      'text': 'text',
+      'image': 'image',
+      'audio': 'audio'
+    }
+
+    const type = typeMapping[rawType]
+
     // Validar tipo
-    if (!['text', 'image', 'audio'].includes(type)) {
+    if (!type || !['text', 'image', 'audio'].includes(type)) {
       return NextResponse.json(
-        { message: 'Invalid type. Must be: text, image, or audio' },
+        { message: 'Invalid type. Must be: text, image/photo, or audio/voice' },
         { status: 400 }
       )
     }
@@ -88,6 +99,11 @@ export async function POST(request: NextRequest) {
       type: type as "text" | "image" | "audio",
       content,
       user: userData || undefined,
+      metadata: {
+        clientIp,
+        userAgent: request.headers.get('user-agent') || undefined,
+        locale: request.headers.get('accept-language')?.split(',')[0] || undefined,
+      },
     })
 
     // Gerar ID único para a análise
